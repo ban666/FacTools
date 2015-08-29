@@ -1,0 +1,49 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Author: liaoben
+__author__ = 'liaoben'
+
+from PyQt4 import QtCore, QtGui
+import sys,os
+from mainui import Ui_Form as mainui
+from temp import AutoTools as BasicTest
+from settings import Settings
+
+
+class MainWindow(QtGui.QMainWindow, mainui):
+
+    def __init__(self, parent = None):
+        super(MainWindow, self).__init__(parent)
+        self.mainui = mainui()
+        self.mainui.setupUi(self)
+        self.settings = Settings()
+        self.com = 'COM1'
+        self.channelID = '15'
+        self.timeout = 30
+        self.settings.comsettings.connect(self.change_settings)
+        self.mainui.BasicTest.clicked.connect(self.basic_show)
+        self.mainui.Settings.clicked.connect(self.settings_show)
+
+
+    def change_settings(self,setting):
+        self.com = setting['com']
+        self.channelID = setting['channelID']
+        self.timeout = setting['timeout']
+        print self.com,self.channelID,self.timeout
+
+
+    def basic_show(self):
+        self.basictest = BasicTest()
+        self.basictest.com = self.com
+        self.basictest.channelID = self.channelID
+        self.basictest.timeout = self.timeout
+        self.basictest.show()
+
+    def settings_show(self):
+        self.settings.show()
+
+if __name__ == "__main__":
+    app = QtGui.QApplication(sys.argv)
+    ps = MainWindow()
+    ps.show()
+    sys.exit(app.exec_())
