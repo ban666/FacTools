@@ -50,14 +50,14 @@ def getDeviceInfo(tstr):
     return result
 
 
-class DisTestFunction(QThread):
+class AgingTestFunction(QThread):
     okSignal = pyqtSignal(str)
     controltimesSignal = pyqtSignal(str)
     endtimeSignal = pyqtSignal(str)
     errSignal = pyqtSignal(str)
     terminalSignal = pyqtSignal(str)
-    def __init__(self,t,whitelist,parent=None):
-        super(DisTestFunction,self).__init__(parent)
+    def __init__(self,t,parent=None):
+        super(AgingTestFunction,self).__init__(parent)
         self.content = ''
         self.timeout = 30
         self.channel = '15'

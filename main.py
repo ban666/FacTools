@@ -8,7 +8,7 @@ import sys,os
 from mainui import Ui_Form as mainui
 from temp import AutoTools as BasicTest
 from settings import Settings
-
+from DisTest import DisTest
 
 class MainWindow(QtGui.QMainWindow, mainui):
 
@@ -48,7 +48,12 @@ class MainWindow(QtGui.QMainWindow, mainui):
         pass
 
     def disconnect_show(self):
-        pass
+        self.Distest = DisTest()
+        self.Distest.com = self.com
+        self.Distest.channelID = self.channelID
+        self.Distest.timeout = self.timeout
+        self.Distest.show()
+
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     ps = MainWindow()

@@ -6,29 +6,21 @@ __author__ = 'liaoben'
 from PyQt4 import QtCore, QtGui
 import sys,os,time
 from multiprocessing import Queue
-from Dis_settings import DisSettings
-from disconnec_ui import Ui_Form as Dis_ui
-from DisTest_function import DisTestFunction
+from ageingui import Ui_Form as Aging_ui
 import serial
 import threading
 
-q = Queue()
-class DisTest(QtGui.QMainWindow):
+class OldTest(QtGui.QMainWindow):
     def __init__(self, parent = None):
-        super(DisTest, self).__init__(parent)
-        self.disui = Dis_ui()
-        self.disui.setupUi(self)
-        self.lcd1 = self.disui.currentTimes
-        self.lcd2 = self.disui.remainTime
-        self.dis_settings = DisSettings()
-        self.disui.disSettings.clicked.connect(self.settings_show)
-        self.disui.startTest.clicked.connect(self.start_test)
-        self.disui.endTest.clicked.connect(self.terminal_test)
-        self.dis_settings.dis_signal.connect(self.change_settings)
-        self.timeout = 10
+        super(OldTest, self).__init__(parent)
+        self.ageui = Aging_ui()
+        self.ageui.setupUi(self)
+        self.ageui.startTest.clicked.connect(self.start_test)
+        self.ageui.endTest.clicked.connect(self.terminal_test)
+        self.ageui.oldSettings.clicked.connect(self.settings_show)
         self.com = 'com1'
         self.channelID = '17'
-        self.env_init()
+
 
     def env_init(self):
         self.control_times = ''

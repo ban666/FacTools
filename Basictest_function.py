@@ -184,7 +184,7 @@ class Dt(QThread):
                 self.emit_data(emit_text)
                 self.resultdict['login'] = 'OK'
                 return True
-            if int(float(time_range)) == self.timeout:
+            if int(float(time_range)) == int(self.timeout):
                 '''
                 print '设备在规定时间内未能入网'.decode('utf-8').encode('gbk')
                 print '入网测试结果：FAIL'.decode('utf-8').encode('gbk')
@@ -237,7 +237,7 @@ class Dt(QThread):
                     emit_text = u'通过！'
                     self.emit_data(emit_text)
                     break
-                if int(float(time_range)) == self.timeout:
+                if int(float(time_range)) == int(self.timeout):
                     '''
                     print '设备在规定时间内未收到控制响应信息'.decode('utf-8').encode('gbk')
                     print '控制测试结果：FAIL'.decode('utf-8').encode('gbk')
@@ -295,7 +295,7 @@ class Dt(QThread):
                 if len(t_data) == tlen and t_data[sid:did] == statuslist[i]:
                     result = 1
                     break
-                if int(float(time_range)) == self.timeout:
+                if int(float(time_range)) == int(self.timeout):
                     '''
                     print '设备在规定时间内未收到控制响应信息'.decode('utf-8').encode('gbk')
                     print '控制测试结果：FAIL'.decode('utf-8').encode('gbk')
