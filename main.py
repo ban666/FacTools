@@ -23,7 +23,8 @@ class MainWindow(QtGui.QMainWindow, mainui):
         self.settings.comsettings.connect(self.change_settings)
         self.mainui.BasicTest.clicked.connect(self.basic_show)
         self.mainui.Settings.clicked.connect(self.settings_show)
-
+        self.mainui.OldTest.clicked.connect(self.oldtest_show)
+        self.mainui.DisconnectTest.clicked.connect(self.disconnect_show)
 
     def change_settings(self,setting):
         self.com = setting['com']
@@ -42,6 +43,12 @@ class MainWindow(QtGui.QMainWindow, mainui):
     def settings_show(self):
         self.settings.show()
 
+    def oldtest_show(self):
+
+        pass
+
+    def disconnect_show(self):
+        pass
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     ps = MainWindow()

@@ -33,8 +33,9 @@ class Ui_Form(object):
         self.pushButton = QtGui.QPushButton(Form)
         self.pushButton.setGeometry(QtCore.QRect(580, 300, 75, 41))
         self.pushButton.setObjectName(_fromUtf8("pushButton"))
-        self.pushButton_2 = QtGui.QPushButton(Form)
         '''
+        self.pushButton_2 = QtGui.QPushButton(Form)
+
         self.pushButton_2.setGeometry(QtCore.QRect(580, 300, 75, 41))
         self.pushButton_2.setObjectName(_fromUtf8("pushButton_2"))
         '''

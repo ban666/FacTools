@@ -10,12 +10,13 @@ from PyQt4 import QtCore, QtGui
 import sys,os
 import random,time,threading
 from uitest import Ui_MainWindow as ui
+from functionui import Ui_Form as ui
 import serial
 import cmdgen
 from multiprocessing import Process,Queue
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-from devicetest_ui import *
+from Basictest_function import *
 import xlsxwriter,xlrd,xlwt
 from xlutils.copy import copy
 

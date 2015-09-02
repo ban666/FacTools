@@ -12,8 +12,8 @@ class CmdGenerate:
         "04":self.CmdGen_Dg,
         '11':self.CmdGen_Bjq,
         '14':self.CmdGen_Dk,
-        '15':self.CmdGen_Kaiguan,
-        '16':self.CmdGen_Kaiguan,
+        '15':self.CmdGen_Sk,
+        '16':self.CmdGen_Tk,
         '17':self.CmdGen_Zncl,
         '18':self.CmdGen_Zncl
         }
@@ -34,7 +34,7 @@ class CmdGenerate:
         result='{:004x}'.format(sum)
         return result
 
-    def CmdGen_Dk(self,id):
+    def CmdGen_Sk(self,id):
         cmd_list=['000001020101','000001020100','000001020F00','000001020000']
         status_list=['f10101','f10100','f10101','f10100']
         #kg_list=['一开','二开','三开','一关','二关','三关','全开','全关']
@@ -42,13 +42,21 @@ class CmdGenerate:
         cmd_list=[''.join(['f8e6',x,self.CheckSum(x)]) for x in cmd_list]
         return cmd_list,status_list
 
-    def CmdGen_Kaiguan(self,id):
-        cmd_list=['000001020101','000001020201','000001020301','000001020100','000001020200','000001020300','000001020F00','000001020000']
-        status_list=['']
+    def CmdGen_Dk(self,id):
+        cmd_list=['000001020101','000001020201','000001020100','000001020200','000001020F00','000001020000']
+        status_list=['f1020100','f1020101','f1020001','f1020000','f1020101','f1020000']
         #kg_list=['一开','二开','三开','一关','二关','三关','全开','全关']
         cmd_list=[''.join(['0000',id,x]) for x in cmd_list]
         cmd_list=[''.join(['f8e6',x,self.CheckSum(x)]) for x in cmd_list]
-        return cmd_list
+        return cmd_list,status_list
+
+    def CmdGen_Tk(self,id):
+        cmd_list=['000001020101','000001020201','000001020301','000001020100','000001020200','000001020300','000001020F00','000001020000']
+        status_list=['f103010000','f103010100','f103010101','f10300101''f103000001','f103000000','f103010101','f103000000',]
+        #kg_list=['一开','二开','三开','一关','二关','三关','全开','全关']
+        cmd_list=[''.join(['0000',id,x]) for x in cmd_list]
+        cmd_list=[''.join(['f8e6',x,self.CheckSum(x)]) for x in cmd_list]
+        return cmd_list,status_list
 
     def CmdGen_Dg(self,id):
         cmd_list=['00000100','00000000','00000100']
@@ -83,11 +91,26 @@ class CmdGenerate:
 
     def CmdGen_Zncl(self,id):
         cmd_list=['000001020100','000001020200','000001020300']
+        status_list = ['f103010000','f103000100','f103000001']
 		#kg_list=['开','暂停','关']
 
         cmd_list=[''.join(['0000',id,x]) for x in cmd_list]
         cmd_list=[''.join(['f8e6',x,self.CheckSum(x)]) for x in cmd_list]
-        return cmd_list
+        return cmd_list,status_list
+
+    def CmdGenForDisTest(self):
+        content = self.list1
+        tlist=[]
+        for i in content:
+            con=i.split(',')
+            type=con[1].strip('\n')
+            id=con[0]
+            print id,type
+            if self.errdict.has_key(type):
+                  ret,st=self.errdict[type](id)
+                  tlist.append(ret[-2:])
+
+        return tlist
 
     def CmdGen(self):
         content=self.list1
