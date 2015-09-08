@@ -62,11 +62,3 @@ class Ui_Form(object):
         self.pushButton.setText(_translate("Form", "设置", None))
         self.pushButton_2.setText(_translate("Form", "查看策略说明", None))
 
-if __name__ == "__main__":
-    import sys
-    app = QtGui.QApplication(sys.argv)
-    MainWindow = QtGui.QMainWindow()
-    ui = Ui_Form()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())

@@ -6,7 +6,7 @@ __author__ = 'liaoben'
 from PyQt4 import QtCore, QtGui
 import sys,os
 from mainui import Ui_Form as mainui
-from temp import AutoTools as BasicTest
+from basictest import AutoTools as BasicTest
 from settings import Settings
 from DisTest import DisTest
 

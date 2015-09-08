@@ -183,16 +183,6 @@ class DisTestFunction(QThread):
 
     def run(self):
         cmdlist = self.gen_cmd_for_distest()
-        '''
-        if self.control_times!='null' and self.end_time!='null':
-            self.run_by_end_time(cmdlist)
-        elif self.control_times!='null' and self.end_time == 'null':
-            self.run_by_control_times(cmdlist)
-        elif self.control_times=='null' and self.end_time != 'null':
-            self.run_by_control_times(cmdlist)
-        else:
-            self.errSignal.emit(u'配置出错，请检查！')
-        '''
         if self.end_time!='null':
             self.run_by_end_time(cmdlist)
         else:

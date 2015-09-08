@@ -7,17 +7,11 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt4 import QtCore, QtGui
-import sys,os
-import random,time,threading
-from uitest import Ui_MainWindow as ui
-import serial
-import cmdgen
-from multiprocessing import Process,Queue
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from devicetest_ui import *
-import xlsxwriter,xlrd,xlwt
+from functionui import Ui_Form as ui
+from Basictest_function import *
+import xlsxwriter,xlrd
 from xlutils.copy import copy
+import shutil
 
 QtCore.QTextCodec.setCodecForTr(QtCore.QTextCodec.codecForName("utf8"))
 stopflag = False
@@ -27,10 +21,12 @@ class AutoTools(QtGui.QMainWindow, ui):
     def __init__(self, parent = None):
         super(AutoTools, self).__init__(parent)
         self.com='com1'
+        self.channelID = '15'
+        self.timeout = 30
         self.sinOut = pyqtSignal(str)
         self.ui = ui()
         self.ui.setupUi(self)
-        self.ui.pushButton.clicked.connect(self.slotName)
+        self.ui.pushButton.clicked.connect(self.p1)
         self.terminate = False
         self.result = ''
         self.content = ''
@@ -53,24 +49,25 @@ class AutoTools(QtGui.QMainWindow, ui):
             '18':'智能窗户'
             }
 
+    def change_settings(self,setting):
+        self.com = setting['com']
+        self.channelID = setting['channelID']
+        print 'autotools:',self.com,self.channelID
+
     def env_init(self):
-        self.report_folder = os.getcwd()+'\\Report\\'+str(time.strftime("%Y%m%d%H%M%S", time.localtime()))
+        self.reporttime = str(time.strftime("%Y%m%d%H%M%S", time.localtime()))
+        self.report_folder = os.getcwd()+'\\Report\\'
         if not os.path.exists(self.report_folder):
-            os.mkdir(self.report_folder)
-        self.report_file = self.report_folder+'/Log.txt'
-        self.report_excel = self.report_folder+'/Report.xls'
+            os.makedirs(self.report_folder)
+        self.report_folder = self.report_folder+self.reporttime
+        if not os.path.exists(self.report_folder):
+            os.makedirs(self.report_folder)
+        self.report_file = self.report_folder+'/Log_'+self.reporttime+'.txt'
+        self.report_excel = self.report_folder+'/Report'+self.reporttime+'.xls'
         self.init_excel()
+
         self.t = ''
-        try:
-            self.t = serial.Serial(self.com,38400)
-        except Exception as e:
-            self.printForUi(u'串口打开失败，请检查后重新运行程序')
-        self.thread_test = Dt(self.t)
-        self.thread_test.textOut.connect(self.printForUi)
-        self.thread_test.writeExcel.connect(self.writeExcel)
-        self.thread_test.terminalOut.connect(self.p1)
-        self.zigbee_thread = TestThread(self.t)
-        self.zigbee_thread.start()
+
 
     def slotName(self):
         self.ui.pushButton.setEnabled(False)
@@ -93,12 +90,17 @@ class AutoTools(QtGui.QMainWindow, ui):
                 self.thread = threading.Thread(target=self.thread_test.device_test,args=(q,p,))
                 self.thread.start()
         else:
-            self.t.close()
-            time.sleep(0.1)
-            self.zigbee_thread.stop()
-            self.zigbee_thread.join()
-            self.ui.pushButton.setEnabled(True)
+            try:
+                self.t.close()
+                time.sleep(0.1)
+                self.zigbee_thread.stop()
+                self.zigbee_thread.join()
+                self.ui.pushButton.setEnabled(True)
+            except Exception as e:
+                print e
             return 'terminate'
+
+
 
     def start_test(self,content):
         pass
@@ -159,16 +161,23 @@ class AutoTools(QtGui.QMainWindow, ui):
         self.zigbee_thread = TestThread(self.t)
         self.zigbee_thread.start()
         '''
-        self.slotName()
+        print 'auto：',self.com,self.channelID,self.timeout
+        try:
+            self.t = serial.Serial(str(self.com),38400)
+            self.thread_test = Dt(self.t)
+            self.thread_test.timeout =self.timeout
+            self.thread_test.textOut.connect(self.printForUi)
+            self.thread_test.writeExcel.connect(self.writeExcel)
+            self.thread_test.terminalOut.connect(self.slotName)
+            self.zigbee_thread = TestThread(self.t,self.channelID)
+            self.zigbee_thread.start()
+            self.slotName()
+        except Exception as e:
+            print e
+            self.printForUi(u'串口打开失败，请检查设置并在设置成功后重新运行程序')
 
-    def startThread(self):
-        self.thread.start()
-
-    def stopThead(self):
-         self.thread.quit()
 
     def closeEvent(self, event):
-        print 11111
         try:
             self.t.close()
             time.sleep(0.1)
@@ -177,20 +186,33 @@ class AutoTools(QtGui.QMainWindow, ui):
         except Exception as e:
             print e
         finally:
+            tstr = u'是否保存本次测试记录'
+            close = QtGui.QMessageBox.question(self,'Message',tstr,QtGui.QMessageBox.Yes,QtGui.QMessageBox.No)
+            print 1111
+            if close == QtGui.QMessageBox.Yes:
+                s =QtGui.QFileDialog.getExistingDirectory()
+                save_folder = unicode(QtCore.QString(s))+'\\'+self.reporttime
+                if not os.path.exists(save_folder):
+                    os.makedirs(save_folder)
+                shutil.copy(self.report_excel,save_folder)
+                if os.path.exists(self.report_file):
+                    shutil.copy(self.report_file,save_folder)
+                event.accept()
             event.accept()
 
 class TestThread(threading.Thread):
 
-    def __init__(self,t,thread_num=0, timeout=0.01):
+    def __init__(self,t,channel,thread_num=0, timeout=0.01):
         super(TestThread, self).__init__()
         self.thread_num = thread_num
+        self.channel = channel
         self.t = t
         self.stopped = False
         self.timeout = timeout
 
     def run(self):
         global q,p
-        subthread = threading.Thread(target=Dt(self.t).com_read, args=(q,p,))
+        subthread = threading.Thread(target=Dt(self.t).com_read, args=(q,p,self.channel,))
         subthread.setDaemon(True)
         subthread.start()
 

@@ -109,15 +109,15 @@ class Dt(QThread):
             "11":[26,16,22],
             '14':[26,16,22],
             '15':[28,16,24],
-            '16':[30,26,36],
+            '16':[30,16,26],
             '17':[30,16,26],
             '18':[30,16,26]
         }
 
         self.status_testdict={
-            '03':[['F10201','F10400'],['请打开门磁','请关闭门磁']],
+            '03':[['F10401','F10400'],['请打开门磁','请关闭门磁']],
             "04":[['F102010F','F102000F','F102010F','F1020101'],['请打开调光器','请关闭调光器','请将调光器调到最亮','请将调光器调到最暗']], #调光状态位存疑
-            '0c':[['F10401','F10400'],['请触发人体红外报警器','请等待人体红外报警器关闭']],
+            '0c':[['F10401','F10400'],['请触发人体红外报警器','请等待人体红外报警器关闭']],#防拆状态位
             '0d':[['F10401','F10400','F10402','F10400'],['请触发烟雾报警','请等待烟雾报警结束','请触发拆除报警','请等待拆除报警结束']],
             '0e':[['0001','0000','0100','0000'],['请触发可燃气体报警','请等待可燃气体报警结束','请触发拆除报警','请等待拆除报警结束']],
             '14':[['F10101','F10100'],['请打开1孔','请关闭1孔']],
@@ -282,6 +282,7 @@ class Dt(QThread):
         for i in range(len(cmdlist)):
             self.clear_q(q)
             self.t.write(cmdlist[i])
+            print len(cmdlist),i,cmdlist[i],statuslist[i]
             s_time = time.time()
             while True:
                 t_data = ''
@@ -334,6 +335,8 @@ class Dt(QThread):
     def judge_result(self,final_result,p):
         emit_text = u'测试结束，请将设备断电！'
         self.emit_data(emit_text)
+        emit_text = u'================================================================'
+        self.emit_data(emit_text)
         if final_result == True:
             emit_text = u'设备mac:'+self.content[:16]+u' 设备类型:'+ self.devicedict[str(self.content[-2:])].decode('utf-8') +u' 的设备测试通过！'
             self.resultdict['result'] = 'OK'
@@ -345,6 +348,8 @@ class Dt(QThread):
             emit_text = u'测试结果异常！'
             self.resultdict['result'] = 'Block'
         self.clear_whitelist(p)
+        self.emit_data(emit_text)
+        emit_text = u'================================================================'
         self.emit_data(emit_text)
         self.resultdict['endtime'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         self.writeExcel.emit(self.resultdict)

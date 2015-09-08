@@ -56,11 +56,11 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(_translate("Form", "Form", None))
-        self.oldSettings.setText(_translate("Form", "老化设置", None))
-        self.startTest.setText(_translate("Form", "开始老化", None))
-        self.endTest.setText(_translate("Form", "结束老化", None))
-        self.label.setText(_translate("Form", "单节点状态查看：", None))
-        self.label_2.setText(_translate("Form", "全部节点状态查看：", None))
+        self.oldSettings.setText(_translate("Form", u"老化设置", None))
+        self.startTest.setText(_translate("Form", u"开始老化", None))
+        self.endTest.setText(_translate("Form", u"结束老化", None))
+        self.label.setText(_translate("Form", u"单节点状态查看：", None))
+        self.label_2.setText(_translate("Form", u"全部节点状态查看：", None))
 
 if __name__ == "__main__":
     import sys
