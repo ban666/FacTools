@@ -12,18 +12,6 @@ from multiprocessing import Process,Queue
 import cmdgen
 from PyQt4.QtCore import *
 
-def fileGen(confgfile='work.cfg'):
-    config=ConfigParser.ConfigParser()
-    with open(confgfile,"r") as cfgfile:
-        config.readfp(cfgfile)
-        work_directory = config.get('conf','work_directory')
-        channel =config.get('conf','channel')
-    date = time.strftime("%Y%m%d%H%M%S", time.localtime())
-    macfile=work_directory+'Macinfo.txt'
-    wfile=work_directory+date+'.txt'
-    result = [macfile,wfile,channel]
-    return result
-
 def CheckSum(data,jz=16):
     sum=0
     for i in range(0,len(data),2):
@@ -50,26 +38,28 @@ def getDeviceInfo(tstr):
     return result
 
 
-class DisTestFunction(QThread):
-    okSignal = pyqtSignal(str)
-    controltimesSignal = pyqtSignal(str)
-    endtimeSignal = pyqtSignal(str)
-    errSignal = pyqtSignal(str)
-    terminalSignal = pyqtSignal(str)
-    def __init__(self,t,whitelist,parent=None):
-        super(DisTestFunction,self).__init__(parent)
+class OldTestFunction(QThread):
+    ot_okSignal = pyqtSignal(str)
+    ot_controltimesSignal = pyqtSignal(str)
+    ot_endtimeSignal = pyqtSignal(str)
+    ot_errSignal = pyqtSignal(str)
+    ot_terminalSignal = pyqtSignal(str)
+    init_Signal = pyqtSignal(dict)
+    def __init__(self,t,devicelist,parent=None):
+        super(OldTestFunction,self).__init__(parent)
         self.content = ''
         self.timeout = 30
         self.channel = '15'
         self.iddict={}
+        self.typedict={}
         self.typelist = []
+        self.statusdict = {}
         self.control_times = 'null'
         self.end_time = 'null'
         self.t = t
         self.stopflag = False
-        self.whitelist=whitelist
-
-        self.id_gen()
+        self.devicelist = devicelist
+        #self.id_gen()
         self.devicedict={
             '01':'智能路由节点',
             '04':'智能调光器',
@@ -88,9 +78,18 @@ class DisTestFunction(QThread):
             }
 
     def id_gen(self):
-        for i in range(len(self.whitelist)):
-            self.iddict[str(self.whitelist[i])[:16]] = str('{:02x}'.format(i+1))
-            self.typelist.append(str('{:04x}'.format(i+1))+','+str(self.whitelist[i])[16:])
+        for i in range(len(self.devicelist)):
+            mac = str(self.devicelist[i])[:16]
+            id = str('{:04x}'.format(i+1))
+            typestr = str(self.devicelist[i])[16:18]
+            type = self.devicedict[typestr]
+            self.iddict[mac] = str('{:02x}'.format(i+1))
+            self.typedict[mac] = id
+            self.statusdict[id] = [str(i),mac,type,u'否','','','']
+            if str(self.devicelist[i])[-1:] == 2:
+                self.typelist.append(str('{:04x}'.format(i+1))+','+typestr)
+        print self.statusdict
+        self.init_Signal.emit(self.statusdict)
 
     def clear_q(self,p):
         while not p.empty():
@@ -99,9 +98,9 @@ class DisTestFunction(QThread):
             except:
                 pass
 
-    def gen_cmd_for_distest(self):
+    def gen_cmd_for_oldtest(self):
         cmdg = cmdgen.CmdGenerate(self.typelist)
-        cmdlist = cmdg.CmdGenForDisTest()
+        cmdlist = cmdg.CmdGenForOldTest()
         return cmdlist
 
     def run_by_control_times(self,cmdlist):
@@ -145,34 +144,51 @@ class DisTestFunction(QThread):
             if self.stopflag == True:
                     break
             try:
-                for j in range(len(cmdlist)):
-                    now_time = int(time.time())
-                    if self.sec2time(now_time).split(':')[:2] == terminal_time:
-                        self.terminalSignal.emit('terminal')
-                        raise
-                    cmd = cmdlist[j][0]
-                    #print cmd
-                    self.t.write(cmd.decode('hex'))
-                    send_str = now_time - stime
-                    self.endtimeSignal.emit(self.sec2time(send_str))
-                    time.sleep(1)
-                for k in range(len(cmdlist)):
-                    now_time = int(time.time())
-                    if self.sec2time(now_time).split(':')[:2] == terminal_time:
-                        self.terminalSignal.emit('terminal')
-                        raise
-                    cmd = cmdlist[k][1]
-                    #print cmd
-                    self.t.write(cmd.decode('hex'))
-                    send_str = time.time() - stime
-                    self.endtimeSignal.emit(self.sec2time(send_str))
-                    time.sleep(1)
-                c_times +=1
-                self.controltimesSignal.emit(str(c_times))
+                for i in range(int(self.control_times)):
+                    for j in range(len(cmdlist)):
+                        now_time = int(time.time())
+                        if self.sec2time(now_time).split(':')[:2] == terminal_time:
+                            self.terminalSignal.emit('terminal')
+                            raise
+                        cmd = cmdlist[j][0]
+                        #print cmd
+                        self.t.write(cmd.decode('hex'))
+                        send_str = now_time - stime
+                        self.endtimeSignal.emit(self.sec2time(send_str))
+                        time.sleep(1)
+                    for k in range(len(cmdlist)):
+                        now_time = int(time.time())
+                        if self.sec2time(now_time).split(':')[:2] == terminal_time:
+                            self.terminalSignal.emit('terminal')
+                            raise
+                        cmd = cmdlist[k][1]
+                        #print cmd
+                        self.t.write(cmd.decode('hex'))
+                        send_str = time.time() - stime
+                        self.endtimeSignal.emit(self.sec2time(send_str))
+                        time.sleep(1)
+                    c_times +=1
+                    self.controltimesSignal.emit(str(c_times))
             except Exception as e:
                 print 'run_by_end_time,error!!!!!!',e
                 self.terminalSignal.emit('terminal')
                 return
+
+    def ana_data(self):
+        while True:
+            try:
+                if self.stopflag == True:
+                    break
+                t_data = q.get(timeout=0.01)
+                if t_data != '':
+                    self.data_check()
+            except Exception as e:
+                print e
+            finally:
+                self.ana_data()
+
+    def data_check(self,tstr):
+        data_len = len(tstr)
 
     def sec2time(self,sec):
         sec = int(sec)
@@ -182,12 +198,14 @@ class DisTestFunction(QThread):
         tstr = str(h)+':'+str(m)+':'+str(s)
         return tstr
 
+    '''
     def run(self):
         cmdlist = self.gen_cmd_for_distest()
         if self.end_time!='null':
             self.run_by_end_time(cmdlist)
         else:
             self.run_by_control_times(cmdlist)
+    '''
 
     def check_online(self,q):
         s_time = time.time()
@@ -201,8 +219,6 @@ class DisTestFunction(QThread):
                 t_data = q.get(timeout=0.01)
             except:
                 pass
-            if self.stopflag == True:
-                return 'terminal'
             if len(t_info) == 0:
                 return True
             if t_data[20:40] in t_info:
@@ -220,9 +236,7 @@ class DisTestFunction(QThread):
         elif check_result == False:
             self.okSignal.emit('fail')
         else:
-            print 11111111111111
             self.okSignal.emit('block')
-            return
 
     def com_read(self,q,channel):
         #set channel
@@ -312,11 +326,12 @@ if __name__ == '__main__':
     q = Queue()
     whitelist = ['00124b0004f0021b16','00124b0003a60fa614']
     t = ''
-    cmd = DisTestFunction(t,whitelist).gen_cmd_for_distest()
-    print cmd
+    dl = ['1234567980123456160']
+    oldtest = OldTestFunction(t,dl)
+    b = oldtest.id_gen()
+    print b
     '''
-    t = serial.Serial(0,38400)
-    t2 = threading.Thread(target=DisTestFunction(t,whitelist).login_test,args=(q,))
+    t2 = threading.Thread(target=OldTestFunction(t,whitelist).login_test,args=(q,))
 
     t1 = threading.Thread(target=DisTestFunction(t,whitelist).com_read,args=(q,'17',))
     t1.start()

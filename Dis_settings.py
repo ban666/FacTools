@@ -19,10 +19,9 @@ class DisSettings(QtGui.QMainWindow):
 
     def save_settings(self):
         result = self.check_data()
-        print self.control_times,self.end_time,self.devicelist
         if result != False:
             send_dict = {'control_times':self.control_times,'end_time':self.end_time,'device_list':self.devicelist}
-
+            print send_dict
             self.dis_signal.emit(send_dict)
             self.alert_warning(tstr=u'配置成功，请关闭窗口')
 
@@ -48,7 +47,6 @@ class DisSettings(QtGui.QMainWindow):
             return False
 
     def check_devicelist(self,content):
-        print content
         content = content.split('\n')
         for i in content:
             i=str(i).strip()

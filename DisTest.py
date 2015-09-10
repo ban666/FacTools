@@ -14,6 +14,7 @@ import threading
 
 q = Queue()
 class DisTest(QtGui.QMainWindow):
+    login_terminalSignal = QtCore.pyqtSignal(str)
     def __init__(self, parent = None):
         super(DisTest, self).__init__(parent)
         self.disui = Dis_ui()

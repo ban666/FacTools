@@ -90,8 +90,8 @@ class CmdGenerate:
         return cmd_list
 
     def CmdGen_Zncl(self,id):
-        cmd_list=['000001020100','000001020200','000001020300']
-        status_list = ['f103010000','f103000100','f103000001']
+        cmd_list=['000001020100','000001020300','000001020200']
+        status_list = ['f103010000','f103000001','f103000100']
 		#kg_list=['开','暂停','关']
 
         cmd_list=[''.join(['0000',id,x]) for x in cmd_list]
@@ -99,6 +99,20 @@ class CmdGenerate:
         return cmd_list,status_list
 
     def CmdGenForDisTest(self):
+        content = self.list1
+        tlist=[]
+        for i in content:
+            con=i.split(',')
+            type=con[1].strip('\n')
+            id=con[0]
+            print id,type
+            if self.errdict.has_key(type):
+                  ret,st=self.errdict[type](id)
+                  tlist.append(ret)
+
+        return tlist
+
+    def CmdGenForOldTest(self):
         content = self.list1
         tlist=[]
         for i in content:
