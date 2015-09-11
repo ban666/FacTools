@@ -40,7 +40,7 @@ class OldTest(QtGui.QMainWindow):
         self.oldui.startTest.clicked.connect(self.start_test)
         self.oldui.endTest.clicked.connect(self.terminal_test)
         self.old_settings.old_signal.connect(self.change_settings)
-        self.timeout = 10
+        self.timeout = 300
         self.com = 'com1'
         self.channelID = '17'
         self.env_init()
@@ -50,6 +50,10 @@ class OldTest(QtGui.QMainWindow):
         self.end_time = ''
         self.device_list = ''
         self.t = ''
+        fol = os.getcwd()+'/Log/'
+        if not os.path.exists(fol):
+            os.mkdir(fol)
+        self.zigbeefile = fol+'Zigbeelog'+time.strftime("%Y%m%d%H%M%S", time.localtime())+'.txt'
 
     def change_settings(self,content):
         self.control_times = content['control_times']
@@ -69,43 +73,46 @@ class OldTest(QtGui.QMainWindow):
             if check_result == False:
                 return
             self.t = serial.Serial(str(self.com),38400)
-            print 1111
             self.oldtest = OldTestFunction(self.t,self.device_list)
-            print 2222
             self.oldtest.init_Signal.connect(self.display_init)
-            print 3333
+            self.oldtest.statusChange_Signal.connect(self.display_change)
             self.oldtest.id_gen()
-            print 4444
-            '''
-            self.zigbee_thread = oldtestZigbeeThread(self.t,self.channelID,self.device_list)
-            self.oldtest.okSignal.connect(self.start_control)
-            self.oldtest.terminalSignal.connect(self.terminal_test)
-            self.oldtest.controltimesSignal.connect(self.lcd1_change)
-            self.oldtest.endtimeSignal.connect(self.lcd2_change)
-            self.oldtest.errSignal.connect(self.err_handle)
-
+            self.zigbee_thread = oldtestZigbeeThread(self.t,self.channelID,self.device_list,self.end_time,self.zigbeefile)
+            self.oldtest.ot_okSignal.connect(self.start_control)
+            self.oldtest.ot_terminalSignal.connect(self.terminal_test)
+            self.oldtest.ot_controltimesSignal.connect(self.lcd1_change)
+            self.oldtest.ot_endtimeSignal.connect(self.lcd2_change)
+            self.oldtest.ot_errSignal.connect(self.err_handle)
             self.oldtest.control_times = self.control_times
             self.oldtest.end_time = self.end_time
             self.oldtest.timeout = self.timeout
             self.wait_for_access()
             self.zigbee_thread.start()
-            '''
+            self.back_thread_start()
+            print 'zfile:',self.zigbeefile
         except Exception as e:
             self.err_handle(u'测试出现异常，请检查相关配置')
-            '''
             self.terminal_test()
-            '''
             print e
         #start control
 
+    def back_thread_start(self):
+        global q
+        self.judge_loseconnect = threading.Thread(target=self.oldtest.judge_loseconnect, args=())
+        self.judge_loseconnect.start()
+        self.ana_data = threading.Thread(target=self.oldtest.ana_data, args=(q,))
+        self.ana_data.start()
+
     def display_init(self,statusdict):
-        print 5555
         for i,j in statusdict.items():
-            print i,j
-            for k in range(len(j)):
-                print j[k]
-                item = self.tableWidget.item(int(i), int(k))
-                item.setText(_translate("Form", str(j[k]), None))
+            for k in range(len(j)-1):
+                item = self.tableWidget.item(int(j[0]), int(k))
+                item.setText(_translate("Form", str(j[k+1]), None))
+
+    def display_change(self,statuslist):
+        for i in range(len(statuslist)-1):
+            item = self.tableWidget.item(int(statuslist[0]), i)
+            item.setText(_translate("Form", str(statuslist[i+1]), None))
 
     def check_config(self):
         if self.device_list == '' or (self.control_times == '' and self.end_time == ''):
@@ -119,26 +126,27 @@ class OldTest(QtGui.QMainWindow):
 
     def lcd1_change(self,tstr):
         self.lcd1.display(tstr)
-        pass
 
     def lcd2_change(self,tstr):
         self.lcd2.display(tstr)
 
     def start_control(self,signal):
         if signal == 'ok':
-            tstr = u'通断设备已全部入网，是否开始通断测试'
+            tstr = u'通断设备已全部入网，是否开始控制测试'
             confirm = QtGui.QMessageBox.question(self,'Message',tstr,QtGui.QMessageBox.Yes,QtGui.QMessageBox.No)
             if confirm == QtGui.QMessageBox.Yes:
                 self.oldtest.start()
             else:
-                self.terminal_test()
+                #self.terminal_test()
+                pass
         elif signal == 'fail':
-            tstr = u'通断设备并未全部入网，是否开始通断测试'
+            tstr = u'通断设备并未全部入网，是否开始控制测试'
             confirm = QtGui.QMessageBox.question(self,'Message',tstr,QtGui.QMessageBox.Yes,QtGui.QMessageBox.No)
             if confirm == QtGui.QMessageBox.Yes:
                 self.oldtest.start()
             else:
-                self.terminal_test()
+                #self.terminal_test()
+                pass
         else:
             self.terminal_test()
 
@@ -162,18 +170,23 @@ class OldTest(QtGui.QMainWindow):
 
 class oldtestZigbeeThread(threading.Thread):
 
-    def __init__(self,t,channel,whitelist,thread_num=0, timeout=0.01):
+    def __init__(self,t,channel,whitelist,endtime,zigbeefile,thread_num=0, timeout=0.01):
         super(oldtestZigbeeThread, self).__init__()
         self.thread_num = thread_num
         self.channel = channel
         self.whitelist = whitelist
+        self.endtime = endtime
+        self.zigbeefile = zigbeefile
         self.t = t
         self.stopped = False
         self.timeout = timeout
 
     def run(self):
         global q
-        subthread = threading.Thread(target=oldtestFunction(self.t,self.whitelist).com_read, args=(q,self.channel,))
+        self.zigbee = OldTestFunction(self.t,self.whitelist)
+        self.zigbee.end_time =self.endtime
+        self.zigbee.id_gen()
+        subthread = threading.Thread(target=self.zigbee.com_read, args=(q,self.channel,self.zigbeefile,))
         subthread.setDaemon(True)
         subthread.start()
 

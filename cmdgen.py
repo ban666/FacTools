@@ -9,6 +9,7 @@ class CmdGenerate:
     def __init__(self,list1):
         self.list1=list1
         self.errdict={
+        "02":self.CmdGen_Dg,
         "04":self.CmdGen_Dg,
         '11':self.CmdGen_Bjq,
         '14':self.CmdGen_Dk,
@@ -18,6 +19,7 @@ class CmdGenerate:
         '18':self.CmdGen_Zncl
         }
         self.statusdict={
+        "02":[28,16,22,'f10200'],
         "04":[28,16,22,'f10200'],
         "11":[32,16,22,'f10400'],
         '14':[26,16,24,'f10100'],
@@ -108,7 +110,7 @@ class CmdGenerate:
             print id,type
             if self.errdict.has_key(type):
                   ret,st=self.errdict[type](id)
-                  tlist.append(ret)
+                  tlist.append(ret[-2:])
 
         return tlist
 
@@ -122,7 +124,7 @@ class CmdGenerate:
             print id,type
             if self.errdict.has_key(type):
                   ret,st=self.errdict[type](id)
-                  tlist.append(ret[-2:])
+                  tlist.append(ret)
 
         return tlist
 

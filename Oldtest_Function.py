@@ -45,13 +45,16 @@ class OldTestFunction(QThread):
     ot_errSignal = pyqtSignal(str)
     ot_terminalSignal = pyqtSignal(str)
     init_Signal = pyqtSignal(dict)
+    statusChange_Signal = pyqtSignal(list)
+    zigbeefile_Signal = pyqtSignal(str)
     def __init__(self,t,devicelist,parent=None):
         super(OldTestFunction,self).__init__(parent)
         self.content = ''
         self.timeout = 30
         self.channel = '15'
+        self.lose_timeout = 900
         self.iddict={}
-        self.typedict={}
+        self.macdict={}
         self.typelist = []
         self.statusdict = {}
         self.control_times = 'null'
@@ -62,6 +65,7 @@ class OldTestFunction(QThread):
         #self.id_gen()
         self.devicedict={
             '01':'智能路由节点',
+            '02':'智能调光器',
             '04':'智能调光器',
             '03':'智能门磁感应器',
             '06':'智能全向红外网关',
@@ -77,6 +81,34 @@ class OldTestFunction(QThread):
             '18':'智能窗户'
             }
 
+        self.device_statusdict={
+            "02":[28,16,22],
+            '03':[32,16,22],
+            "04":[28,16,22],
+            '0c':[32,16,22],
+            '0d':[32,16,22],
+            '0e':[76,40,44],
+            "11":[26,16,22],
+            '14':[26,16,22],
+            '15':[28,16,24],
+            '16':[30,16,26],
+            '17':[30,16,26],
+            '18':[30,16,26]
+        }
+        self.status_testdict={
+            '03':[['F10401','F10400'],['打开','关闭']],
+            "02":[['F10201','F10200'],['打开','关闭']],
+            "04":[['F10201','F10200'],['打开','关闭']], #调光状态位存疑
+            '0c':[['F10401','F10400'],['红外报警','正常']],#防拆状态位
+            '0d':[['F10401','F10400','F10402'],['烟雾报警','正常','防拆报警']],
+            '0e':[['0001','0000','0100'],['可燃报警','正常','防拆报警']],
+            '11':[['F10101','F10100'],['打开','关闭']],
+            '14':[['F10101','F10100'],['1开','1关']],
+            '15':[['F1020100','F1020101','F1020001','F1020000'],['1开2关','1开2开','1关2开','1关2关']],
+            '16':[['F103010000','F103010100','F103010101','F103000101','F103000001','F103000000'],['1开2关3关','1开2开3关','1开2开3开','1关2开3开','1关2关3开','1关2关3关']],
+            '17':[['F103010000','F103000100','F103000001'],['打开','暂停','关闭']],
+            '18':[['F103010000','F103000100','F103000001'],['打开','暂停','关闭']]
+        }
     def id_gen(self):
         for i in range(len(self.devicelist)):
             mac = str(self.devicelist[i])[:16]
@@ -84,9 +116,9 @@ class OldTestFunction(QThread):
             typestr = str(self.devicelist[i])[16:18]
             type = self.devicedict[typestr]
             self.iddict[mac] = str('{:02x}'.format(i+1))
-            self.typedict[mac] = id
-            self.statusdict[id] = [str(i),mac,type,u'否','','','']
-            if str(self.devicelist[i])[-1:] == 2:
+            self.macdict[mac] = id
+            self.statusdict[id] = [str(i),mac,type,'否','','']
+            if str(self.devicelist[i])[-1:] == str(2):
                 self.typelist.append(str('{:04x}'.format(i+1))+','+typestr)
         print self.statusdict
         self.init_Signal.emit(self.statusdict)
@@ -99,38 +131,31 @@ class OldTestFunction(QThread):
                 pass
 
     def gen_cmd_for_oldtest(self):
+        print self.typelist
         cmdg = cmdgen.CmdGenerate(self.typelist)
         cmdlist = cmdg.CmdGenForOldTest()
         return cmdlist
 
     def run_by_control_times(self,cmdlist):
-        stime = int(time.time())
         try:
             for i in range(int(self.control_times)):
                 if self.stopflag == True:
                     break
                 for j in range(len(cmdlist)):
-                    now_time = int(time.time())
                     cmd = cmdlist[j][0]
                     #print cmd
                     self.t.write(cmd.decode('hex'))
-                    send_str = now_time - stime
-                    self.endtimeSignal.emit(self.sec2time(send_str))
                     time.sleep(1)
                 for k in range(len(cmdlist)):
-                    now_time = int(time.time())
                     cmd = cmdlist[k][1]
                     #print cmd
                     self.t.write(cmd.decode('hex'))
-                    send_str = now_time - stime
-                    self.endtimeSignal.emit(self.sec2time(send_str))
                     time.sleep(1)
-                self.controltimesSignal.emit(str(i+1))
+                self.ot_controltimesSignal.emit(str(i+1))
                 print 'control times:',i+1
-            self.terminalSignal.emit('terminal')
         except Exception as e:
                 print 'run_by_control_times,error!!!!!!',e
-                self.terminalSignal.emit('terminal')
+                self.ot_terminalSignal.emit('terminal')
                 return
 
     def run_by_end_time(self,cmdlist):
@@ -138,57 +163,80 @@ class OldTestFunction(QThread):
         c_times = 0
         terminal_time = self.sec2time(self.end_time).split(':')[:2]
         while True:
-            #now_time = int(time.time())
-            #print now_time,self.end_time
-
             if self.stopflag == True:
                     break
             try:
-                for i in range(int(self.control_times)):
-                    for j in range(len(cmdlist)):
-                        now_time = int(time.time())
-                        if self.sec2time(now_time).split(':')[:2] == terminal_time:
-                            self.terminalSignal.emit('terminal')
-                            raise
-                        cmd = cmdlist[j][0]
-                        #print cmd
-                        self.t.write(cmd.decode('hex'))
-                        send_str = now_time - stime
-                        self.endtimeSignal.emit(self.sec2time(send_str))
-                        time.sleep(1)
-                    for k in range(len(cmdlist)):
-                        now_time = int(time.time())
-                        if self.sec2time(now_time).split(':')[:2] == terminal_time:
-                            self.terminalSignal.emit('terminal')
-                            raise
-                        cmd = cmdlist[k][1]
-                        #print cmd
-                        self.t.write(cmd.decode('hex'))
-                        send_str = time.time() - stime
-                        self.endtimeSignal.emit(self.sec2time(send_str))
-                        time.sleep(1)
-                    c_times +=1
-                    self.controltimesSignal.emit(str(c_times))
+                for j in range(len(cmdlist)):
+                    now_time = int(time.time())
+                    if self.sec2time(now_time).split(':')[:2] == terminal_time:
+                        self.ot_terminalSignal.emit('terminal')
+                        raise
+                    cmd = cmdlist[j][0]
+                    #print cmd
+                    self.t.write(cmd.decode('hex'))
+                    time.sleep(1)
+                for k in range(len(cmdlist)):
+                    now_time = int(time.time())
+                    if self.sec2time(now_time).split(':')[:2] == terminal_time:
+                        self.ot_terminalSignal.emit('terminal')
+                        raise
+                    cmd = cmdlist[k][1]
+                    #print cmd
+                    self.t.write(cmd.decode('hex'))
+                    time.sleep(1)
+                c_times +=1
+                self.ot_controltimesSignal.emit(str(c_times))
             except Exception as e:
                 print 'run_by_end_time,error!!!!!!',e
-                self.terminalSignal.emit('terminal')
+                self.ot_terminalSignal.emit('terminal')
                 return
 
-    def ana_data(self):
+    def ana_data(self,q):
         while True:
             try:
                 if self.stopflag == True:
                     break
                 t_data = q.get(timeout=0.01)
+                #print '11111'
                 if t_data != '':
-                    self.data_check()
+                    print 'getdata:',t_data
+                    self.data_check(str(t_data))
+                time.sleep(0.1)
+                print '22222'
             except Exception as e:
-                print e
-            finally:
-                self.ana_data()
+                pass
 
     def data_check(self,tstr):
-        data_len = len(tstr)
+        print 'data_check:',tstr
+        id = tstr[4:8]
+        #mac = self.macdict[id]
+        data_len = len(tstr.strip())
+        device_type = tstr[14:16]
+        status_len = self.device_statusdict[device_type][0]
+        status_str = tstr[self.device_statusdict[device_type][1]:self.device_statusdict[device_type][2]].upper()
+        print id
+        print data_len
+        print status_str
+        nowtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        print 1111
+        if data_len == 42 and tstr[16:20] == 'a209':
+            return
+        if data_len == 52:
+            print 'accesee'
+            self.statusdict[id][3:] = ['是','',nowtime]
+
+            self.statusChange_Signal.emit(self.statusdict[id])
+            return
+        elif data_len == status_len:
+            try:
+                index=self.status_testdict[device_type][0].index(status_str)
+                device_status = self.status_testdict[device_type][1][index]
+                self.statusdict[id][3:] = ['是',device_status,nowtime]
+                self.statusChange_Signal.emit(self.statusdict[id])
+                return
+            except Exception as e :
+                print 'data_check:',e
+
 
     def sec2time(self,sec):
         sec = int(sec)
@@ -198,32 +246,31 @@ class OldTestFunction(QThread):
         tstr = str(h)+':'+str(m)+':'+str(s)
         return tstr
 
-    '''
+
     def run(self):
-        cmdlist = self.gen_cmd_for_distest()
-        if self.end_time!='null':
-            self.run_by_end_time(cmdlist)
-        else:
+        cmdlist = self.gen_cmd_for_oldtest()
+        if len(cmdlist) == 0:
+            return
+        if self.control_times!='null':
             self.run_by_control_times(cmdlist)
-    '''
+        else:
+            self.run_by_end_time(cmdlist)
+
 
     def check_online(self,q):
         s_time = time.time()
-        t_info = []
-        for (i,j) in self.iddict.items():
-            t_info.append(i+'00'+j)
-        t_data=''
+        device_num = len(self.statusdict)
         while True:
+            if self.stopflag == True:
+                self.ot_terminalSignal.emit('terminal')
+                return
+            check_num = 0
             time_range = '{:.2f}'.format(time.time()-s_time)
-            try:
-                t_data = q.get(timeout=0.01)
-            except:
-                pass
-            if len(t_info) == 0:
+            for i,j in self.statusdict.items():
+                if j[3] == '是':
+                    check_num +=1
+            if check_num == device_num:
                 return True
-            if t_data[20:40] in t_info:
-                t_info.pop(t_info.index(t_data[20:40]))
-                print 'pop:',t_info
             #print int(float(time_range)),self.timeout
             if int(float(time_range)) == int(self.timeout):
                 return False
@@ -232,24 +279,49 @@ class OldTestFunction(QThread):
     def login_test(self,q):
         check_result = self.check_online(q)
         if check_result == True:
-            self.okSignal.emit('ok')
+            self.ot_okSignal.emit('ok')
         elif check_result == False:
-            self.okSignal.emit('fail')
+            self.ot_okSignal.emit('fail')
         else:
-            self.okSignal.emit('block')
+            self.ot_okSignal.emit('block')
 
-    def com_read(self,q,channel):
-        #set channel
+    def judge_loseconnect(self):
+        stime = time.time()
+        while True:
+            try:
+                if self.stopflag == True:
+                    break
+                nowtime = time.time()
+                if int(nowtime) == self.end_time:
+                    self.ot_terminalSignal.emit('terminal')
+                    break
+                send_str = time.time() - stime
+                self.ot_endtimeSignal.emit(self.sec2time(send_str))
+                for i,j in self.statusdict.items():
+                    if j[3]=='是':
+                        endtime = time.mktime(time.strptime(j[-1],"%Y-%m-%d %H:%M:%S"))
+                        if time.time() - endtime > self.lose_timeout:
+                            j[3] = '掉线'
+                            self.statusChange_Signal.emit(j)
+                time.sleep(0.5)
+            except Exception as e:
+                print 'judge_loseconnect',e
+            finally:
+                pass
+
+    def com_read(self,q,channel,zfile):
         print 'channel:',channel
         fol = os.getcwd()+'/Log/'
-        if not os.path.exists(fol):
-            os.mkdir(fol)
-        file = fol+'Zigbeelog'+time.strftime("%Y%m%d%H%M%S", time.localtime())+'.txt'
-        with open(file,'w') as f:
-            print file
+        with open(zfile,'w') as f:
+            #print file
             while True:
                 buffer=''
                 try:
+                    nowtime = time.time()
+                    if int(nowtime) == self.end_time:
+                        #self.terminalSignal.emit('terminal')
+                        raise
+
                     rlength=self.t.inWaiting()
 
                     if rlength>=12:
