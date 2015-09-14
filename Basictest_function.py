@@ -10,6 +10,7 @@ import serial
 import time,threading
 from multiprocessing import Process,Queue
 import cmdgen
+import random
 from PyQt4.QtCore import *
 
 def fileGen(confgfile='work.cfg'):
@@ -358,6 +359,7 @@ class Dt(QThread):
 
 
     def device_test(self,q,p):
+        self.defaultid = str('{:02x}'.format(random.randint(1,255)))
         test_list = self.testdict[str(self.content[-2:])]
         result = ''
         self.resultdict['starttime'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())

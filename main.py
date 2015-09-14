@@ -9,6 +9,7 @@ from mainui import Ui_Form as mainui
 from basictest import AutoTools as BasicTest
 from settings import Settings
 from DisTest import DisTest
+from oldtest import OldTest
 
 class MainWindow(QtGui.QMainWindow, mainui):
 
@@ -44,8 +45,11 @@ class MainWindow(QtGui.QMainWindow, mainui):
         self.settings.show()
 
     def oldtest_show(self):
-
-        pass
+        self.oldtest = OldTest()
+        self.oldtest.com = self.com
+        self.oldtest.channelID = self.channelID
+        self.oldtest.timeout = self.timeout
+        self.oldtest.show()
 
     def disconnect_show(self):
         self.Distest = DisTest()

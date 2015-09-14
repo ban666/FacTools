@@ -48,16 +48,13 @@ class Ui_Form(object):
         item.setTextAlignment(QtCore.Qt.AlignJustify|QtCore.Qt.AlignVCenter)
         self.tableWidget.setHorizontalHeaderItem(4, item)
         self.tableWidget.setColumnWidth(4,140)
-        '''
-        item = QtGui.QTableWidgetItem()
-        item.setTextAlignment(QtCore.Qt.AlignJustify|QtCore.Qt.AlignVCenter)
-        self.tableWidget.setHorizontalHeaderItem(5, item)
-        self.tableWidget.setColumnWidth(5,140)
-        '''
         for i in range(100):
             for j in range(5):
                 item = QtGui.QTableWidgetItem()
                 self.tableWidget.setItem(i, j, item)
+        self.anaData = QtGui.QPushButton(Form)
+        self.anaData.setGeometry(QtCore.QRect(390, 580, 71, 31))
+        self.anaData.setObjectName(_fromUtf8("anaData"))
         self.oldSettings = QtGui.QPushButton(Form)
         self.oldSettings.setGeometry(QtCore.QRect(490, 580, 71, 31))
         self.oldSettings.setObjectName(_fromUtf8("oldSettings"))
@@ -123,6 +120,7 @@ class Ui_Form(object):
         item.setText(_translate("Form", "4", None))
         '''
         self.tableWidget.setSortingEnabled(__sortingEnabled)
+        self.anaData.setText(_translate("Form", "数据分析", None))
         self.oldSettings.setText(_translate("Form", "老化设置", None))
         self.startTest.setText(_translate("Form", "开始老化", None))
         self.endTest.setText(_translate("Form", "结束老化", None))

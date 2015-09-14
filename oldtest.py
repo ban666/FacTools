@@ -9,8 +9,11 @@ from multiprocessing import Queue
 from old_settings import OldSettings
 from oldtestui import Ui_Form as Old_ui
 from Oldtest_Function import OldTestFunction
+from Ana_function import ConfigAnalysis
+from Zip_function import zip_folder
 import serial
 import threading
+import shutil
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -39,6 +42,7 @@ class OldTest(QtGui.QMainWindow):
         self.oldui.oldSettings.clicked.connect(self.settings_show)
         self.oldui.startTest.clicked.connect(self.start_test)
         self.oldui.endTest.clicked.connect(self.terminal_test)
+        self.oldui.anaData.clicked.connect(self.save_anadata)
         self.old_settings.old_signal.connect(self.change_settings)
         self.timeout = 300
         self.com = 'com1'
@@ -53,7 +57,49 @@ class OldTest(QtGui.QMainWindow):
         fol = os.getcwd()+'/Log/'
         if not os.path.exists(fol):
             os.mkdir(fol)
+        self.reporttime = str(time.strftime("%Y%m%d%H%M%S", time.localtime()))
+        self.report_folder = os.getcwd()+'\\Report\\'
+        if not os.path.exists(self.report_folder):
+            os.makedirs(self.report_folder)
+        self.report_folder = self.report_folder+self.reporttime
+        if not os.path.exists(self.report_folder):
+            os.makedirs(self.report_folder)
         self.zigbeefile = fol+'Zigbeelog'+time.strftime("%Y%m%d%H%M%S", time.localtime())+'.txt'
+
+    def ana_zigbeefile(self,time_range = 1500):
+        try:
+            ofolder= self.report_folder+'\\oldtest\\'
+            readfile= self.zigbeefile
+            print 'ana_file:',readfile
+            zipname = ofolder+'oldtest_'+str(time.strftime("%Y%m%d%H%M%S", time.localtime()))+'.zip'
+            cfg=ConfigAnalysis(readfile,ofolder)
+            get_content = cfg.GetDate(2)
+            result = cfg.GetAllErrByType(time_range=time_range)
+            cfg.WriteToExcel(result)
+            zip_folder(ofolder,zipname)
+            return zipname
+        except Exception as e:
+            print 'ana_zigbeefile:',e
+            return False
+
+    def save_anadata(self):
+        tstr = u'是否分析本次老化测试结果'
+        close = QtGui.QMessageBox.question(self,'Message',tstr,QtGui.QMessageBox.Yes,QtGui.QMessageBox.No)
+        zipfile = self.ana_zigbeefile()
+        if zipfile == False:
+            tstr = u'后台数据为空，请等待测试完成后进行分析！'
+            self.err_handle(tstr)
+            return
+        if close == QtGui.QMessageBox.Yes:
+            if zipfile == None:
+                tstr = u'无法分析结果，请检查是否成功开始测试！'
+                self.err_handle(tstr)
+            else:
+                s =QtGui.QFileDialog.getExistingDirectory()
+                save_folder = unicode(QtCore.QString(s))+'\\oldtest'+self.reporttime
+                if not os.path.exists(save_folder):
+                    os.makedirs(save_folder)
+                shutil.copy(zipfile,save_folder)
 
     def change_settings(self,content):
         self.control_times = content['control_times']
