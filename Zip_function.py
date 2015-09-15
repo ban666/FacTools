@@ -1,25 +1,22 @@
-#-*- coding=gbk -*-
-import os,zipfile
-from os.path import join
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Author: liaoben
 
-def zip_folder( foldername, filename):
-    zip = zipfile.ZipFile( filename, 'w', zipfile.ZIP_DEFLATED )
-    for root,dirs,files in os.walk(foldername):
-        #files of cur file
-        for filename in files:
-            print "compressing",join(root,filename).encode("gbk")
-            zip.write(join(root,filename).encode("gbk"))
+import os,os.path
+import zipfile
 
-        # empty dir 
-        if  len(files) == 0:
-            print 'empty dir'
-            zif=zipfile.ZipInfo((root+'/').encode("gbk"+"/"))
-            zip.writestr(zif,"")
-    zip.close()
-    print "Finish compressing"
+def zip_folder(dirname,zipfilename):
+    filelist = []
+    if os.path.isfile(dirname):
+        filelist.append(dirname)
+    else :
+        for root, dirs, files in os.walk(dirname):
+            for name in files:
+                filelist.append(os.path.join(root, name))
 
-
-if __name__ == "__main__":
-    folder = 'E:\\git_factest2\\Report\\oldtest\\'
-    filename = 'E:\\git_factest2\\test.zip'
-    zip_folder( folder, filename )
+    zf = zipfile.ZipFile(zipfilename, "w", zipfile.zlib.DEFLATED)
+    for tar in filelist:
+        arcname = tar[len(dirname):]
+        #print arcname
+        zf.write(tar,arcname)
+    zf.close()

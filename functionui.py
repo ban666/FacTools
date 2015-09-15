@@ -31,21 +31,21 @@ class Ui_Form(object):
         self.textEdit.setObjectName(_fromUtf8("textEdit"))
 
         self.pushButton = QtGui.QPushButton(Form)
-        self.pushButton.setGeometry(QtCore.QRect(580, 300, 75, 41))
+        self.pushButton.setGeometry(QtCore.QRect(580, 250, 75, 41))
         self.pushButton.setObjectName(_fromUtf8("pushButton"))
-        '''
+
         self.pushButton_2 = QtGui.QPushButton(Form)
 
         self.pushButton_2.setGeometry(QtCore.QRect(580, 300, 75, 41))
         self.pushButton_2.setObjectName(_fromUtf8("pushButton_2"))
-        '''
+
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(_translate("Form", "Form", None))
         self.pushButton.setText(_translate("Form", "开始测试", None))
-        #self.pushButton_2.setText(_translate("Form", "结束测试", None))
+        self.pushButton_2.setText(_translate("Form", "结束测试", None))
 
 if __name__ == "__main__":
     import sys

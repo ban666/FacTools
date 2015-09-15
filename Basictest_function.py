@@ -61,6 +61,7 @@ class Dt(QThread):
         self.timeout = 30
         self.channel = '15'
         self.defaultid = '77'
+        self.stopflag = False
         self.t = t
         self.iddict={}
         self.resultdict={'login':'','status':'','control':'','result':'','starttime':'','endtime':''}
@@ -172,6 +173,8 @@ class Dt(QThread):
         t_data=''
         while True:
             time_range = '{:.2f}'.format(time.time()-s_time)
+            if self.stopflag == True:
+                return False
             try:
                 t_data = q.get(timeout=0.01)
             except:
@@ -226,6 +229,8 @@ class Dt(QThread):
             while True:
                 t_data = ''
                 time_range = time.time()-s_time
+                if self.stopflag == True:
+                    break
                 try:
                     t_data = q.get(timeout=0.01)
                     print t_data
@@ -359,6 +364,7 @@ class Dt(QThread):
 
 
     def device_test(self,q,p):
+        self.stopflag = False
         self.defaultid = str('{:02x}'.format(random.randint(1,255)))
         test_list = self.testdict[str(self.content[-2:])]
         result = ''

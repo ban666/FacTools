@@ -86,14 +86,14 @@ class OldTest(QtGui.QMainWindow):
         tstr = u'是否分析本次老化测试结果'
         close = QtGui.QMessageBox.question(self,'Message',tstr,QtGui.QMessageBox.Yes,QtGui.QMessageBox.No)
         zipfile = self.ana_zigbeefile()
-        if zipfile == False:
-            tstr = u'后台数据为空，请等待测试完成后进行分析！'
-            self.err_handle(tstr)
-            return
         if close == QtGui.QMessageBox.Yes:
             if zipfile == None:
                 tstr = u'无法分析结果，请检查是否成功开始测试！'
                 self.err_handle(tstr)
+            elif zipfile == False:
+                tstr = u'后台数据为空，请等待测试完成后进行分析！'
+                self.err_handle(tstr)
+                return
             else:
                 s =QtGui.QFileDialog.getExistingDirectory()
                 save_folder = unicode(QtCore.QString(s))+'\\oldtest'+self.reporttime
@@ -194,7 +194,7 @@ class OldTest(QtGui.QMainWindow):
                 #self.terminal_test()
                 pass
         else:
-            self.terminal_test()
+            pass
 
     def wait_for_access(self):
         global q

@@ -27,6 +27,7 @@ class AutoTools(QtGui.QMainWindow, ui):
         self.ui = ui()
         self.ui.setupUi(self)
         self.ui.pushButton.clicked.connect(self.p1)
+        self.ui.pushButton_2.clicked.connect(self.end_test)
         self.terminate = False
         self.result = ''
         self.content = ''
@@ -157,14 +158,11 @@ class AutoTools(QtGui.QMainWindow, ui):
         newWb.save(self.report_excel)
 
     def p1(self):
-        '''
-        self.zigbee_thread = TestThread(self.t)
-        self.zigbee_thread.start()
-        '''
         print 'auto：',self.com,self.channelID,self.timeout
         try:
             self.t = serial.Serial(str(self.com),38400)
             self.thread_test = Dt(self.t)
+            self.thread_test.stopflag = False
             self.thread_test.timeout =self.timeout
             self.thread_test.textOut.connect(self.printForUi)
             self.thread_test.writeExcel.connect(self.writeExcel)
@@ -175,6 +173,18 @@ class AutoTools(QtGui.QMainWindow, ui):
         except Exception as e:
             print e
             self.printForUi(u'串口打开失败，请检查设置并在设置成功后重新运行程序')
+
+    def end_test(self):
+        try:
+            self.thread_test.stopflag=True
+            self.t.close()
+            time.sleep(0.1)
+            self.zigbee_thread.stop()
+            self.zigbee_thread.join()
+            self.ui.pushButton.setEnabled(True)
+        except Exception as e:
+            print e
+
 
 
     def closeEvent(self, event):
