@@ -90,7 +90,7 @@ class Dt(QThread):
             '01':[self.login_test],
             '04':[self.login_test,self.status_test,self.control_test],
             '03':[self.login_test,self.status_test],
-            '06':[self.login_test],
+            '06':[self.login_test],#TODO 红外命令发射测试
             '0d':[self.login_test,self.status_test],
             '0c':[self.login_test,self.status_test],
             '0e':[self.login_test,self.status_test],
@@ -119,7 +119,7 @@ class Dt(QThread):
         self.status_testdict={
             '03':[['F10401','F10400'],['请打开门磁','请关闭门磁']],
             "04":[['F102010F','F102000F','F102010F','F1020101'],['请打开调光器','请关闭调光器','请将调光器调到最亮','请将调光器调到最暗']], #调光状态位存疑
-            '0c':[['F10401','F10400'],['请触发人体红外报警器','请等待人体红外报警器关闭']],#防拆状态位
+            '0c':[['F10401','F10400','F10402','F10400'],['请触发人体红外报警器','请等待人体红外报警器关闭','请触发拆除报警','请等待拆除报警结束']],
             '0d':[['F10401','F10400','F10402','F10400'],['请触发烟雾报警','请等待烟雾报警结束','请触发拆除报警','请等待拆除报警结束']],
             '0e':[['0001','0000','0100','0000'],['请触发可燃气体报警','请等待可燃气体报警结束','请触发拆除报警','请等待拆除报警结束']],
             '14':[['F10101','F10100'],['请打开1孔','请关闭1孔']],
@@ -177,26 +177,18 @@ class Dt(QThread):
                 return False
             try:
                 t_data = q.get(timeout=0.01)
+                if t_data == self.content[:16]+'access':
+                    emit_text = u'入网时间为:'+str(time_range)+u', 入网测试结果：PASS'
+                    self.emit_data(emit_text)
+                    self.resultdict['login'] = 'OK'
+                    return True
+                if int(float(time_range)) == int(self.timeout):
+                    emit_text = u'设备在规定时间内未能入网,'+u'入网测试结果：FAIL'
+                    self.emit_data(emit_text)
+                    self.resultdict['login'] = 'Fail'
+                    return False
             except:
                 pass
-            if t_data[20:40] == t_info:
-                '''
-                print '入网时间为: %s'.decode('utf-8').encode('gbk') % str(time_range)
-                print '入网测试结果：PASS'.decode('utf-8').encode('gbk')
-                '''
-                emit_text = u'入网时间为:'+str(time_range)+u', 入网测试结果：PASS'
-                self.emit_data(emit_text)
-                self.resultdict['login'] = 'OK'
-                return True
-            if int(float(time_range)) == int(self.timeout):
-                '''
-                print '设备在规定时间内未能入网'.decode('utf-8').encode('gbk')
-                print '入网测试结果：FAIL'.decode('utf-8').encode('gbk')
-                '''
-                emit_text = u'设备在规定时间内未能入网,'+u'入网测试结果：FAIL'
-                self.emit_data(emit_text)
-                self.resultdict['login'] = 'Fail'
-                return False
             time.sleep(0.01)
 
     def login_test(self,q,p):
@@ -270,9 +262,6 @@ class Dt(QThread):
             return False
 
     def control_test(self,q,p):
-        '''
-        print '控制测试启动...'.decode('utf-8').encode('gbk')
-        '''
         emit_text = u'控制测试启动...'
         self.emit_data(emit_text)
         result = 0
@@ -298,15 +287,10 @@ class Dt(QThread):
                     print t_data
                 except:
                     pass
-                #print len(t_data) , tlen ,t_data[sid:did] , statuslist[i]
                 if len(t_data) == tlen and t_data[sid:did] == statuslist[i]:
                     result = 1
                     break
                 if int(float(time_range)) == int(self.timeout):
-                    '''
-                    print '设备在规定时间内未收到控制响应信息'.decode('utf-8').encode('gbk')
-                    print '控制测试结果：FAIL'.decode('utf-8').encode('gbk')
-                    '''
                     emit_text = u'设备在规定时间内未收到控制响应信息,控制测试结果：FAIL'
                     self.emit_data(emit_text)
                     self.resultdict['control'] = 'Fail'
@@ -314,10 +298,6 @@ class Dt(QThread):
 
                 time.sleep(0.01)
         if result == 1:
-            '''
-            print '设备控制测试通过'.decode('utf-8').encode('gbk')
-            print '控制测试结果：Pass'.decode('utf-8').encode('gbk')
-            '''
             emit_text = u'设备控制测试通过,控制测试结果：PASS'
             self.emit_data(emit_text)
             self.resultdict['control'] = 'OK'
@@ -366,6 +346,7 @@ class Dt(QThread):
     def device_test(self,q,p):
         self.stopflag = False
         self.defaultid = str('{:02x}'.format(random.randint(1,255)))
+        print 'defaultid:',self.defaultid
         test_list = self.testdict[str(self.content[-2:])]
         result = ''
         self.resultdict['starttime'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -432,8 +413,8 @@ class Dt(QThread):
                                     print id,mac
                                     access_cmd=deviceAccess(cdata,id).decode('hex')
                                     self.t.write(access_cmd)
+                                    q.put(mac+'access')
 
-                            data_flag=1
                             buffer=buffer[dlength:]
                             tstr=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+" "+cdata+'\n'
                             #print tstr

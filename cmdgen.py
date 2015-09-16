@@ -12,8 +12,8 @@ class CmdGenerate:
         "02":self.CmdGen_Dg,
         "04":self.CmdGen_Dg,
         '11':self.CmdGen_Bjq,
-        '14':self.CmdGen_Dk,
-        '15':self.CmdGen_Sk,
+        '14':self.CmdGen_Sk,
+        '15':self.CmdGen_Dk,
         '16':self.CmdGen_Tk,
         '17':self.CmdGen_Zncl,
         '18':self.CmdGen_Zncl

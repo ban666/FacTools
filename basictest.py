@@ -160,13 +160,17 @@ class AutoTools(QtGui.QMainWindow, ui):
     def p1(self):
         print 'auto：',self.com,self.channelID,self.timeout
         try:
+            self.t.close()
+        except:
+            pass
+        try:
             self.t = serial.Serial(str(self.com),38400)
             self.thread_test = Dt(self.t)
             self.thread_test.stopflag = False
             self.thread_test.timeout =self.timeout
             self.thread_test.textOut.connect(self.printForUi)
             self.thread_test.writeExcel.connect(self.writeExcel)
-            self.thread_test.terminalOut.connect(self.slotName)
+            self.thread_test.terminalOut.connect(self.p1)
             self.zigbee_thread = TestThread(self.t,self.channelID)
             self.zigbee_thread.start()
             self.slotName()

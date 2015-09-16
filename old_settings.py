@@ -5,7 +5,7 @@ __author__ = 'liaoben'
 
 from PyQt4 import QtCore, QtGui
 import sys,os,time
-from old_settingsui import Ui_Form as old_settings_ui
+from oldsettingsui import Ui_Form as old_settings_ui
 
 
 class OldSettings(QtGui.QMainWindow):
@@ -15,9 +15,10 @@ class OldSettings(QtGui.QMainWindow):
         self.oldsettingsui = old_settings_ui()
         self.oldsettingsui.setupUi(self)
         self.oldsettingsui.saveSettings.clicked.connect(self.save_settings)
-        self.table = self.oldsettingsui.tableWidget
+        #self.table = self.oldsettingsui.tableWidget
         self.typelist=['01','03','04','0c','0d','0e','06','11','14','15','16','17','18']
 
+    '''
     def get_settings(self):
         result = []
         for i in range(100):
@@ -41,6 +42,33 @@ class OldSettings(QtGui.QMainWindow):
             self.alert_warning(tstr)
             return False
         return result
+    '''
+
+    def check_devicelist(self,content):
+        content = content.split('\n')
+        for j in range(len(content)):
+            i=str(content[j]).strip()
+            if len(i)!=18 and len(i)!=19:
+                tstr=u'第'+str(j+1)+u'行 数据长度错误！'
+                self.alert_warning(tstr)
+                return False
+            if not str(i)[16:18] in self.typelist:
+                tstr=u'第'+str(j+1)+u'行 设备类型错误！'
+                self.alert_warning(tstr)
+                return False
+            if len(i)==19 and i[-1:]!='2':
+                tstr=u'第'+str(j+1)+u'行 需控制测试的设备最后一位需为2！'
+                self.alert_warning(tstr)
+                return False
+        if len(content) != len(set(content)):
+            tstr=u'设备列表中有重复元素，请检查后重新填写'
+            self.alert_warning(tstr)
+            return False
+        if len(content) > 100:
+            tstr=u'通断设备最大为100个，配置名单超过范围'
+            self.alert_warning(tstr)
+            return False
+        return content
 
     def check_mac(self,mac):
         if len(mac)!=18 or not mac[-2:] in self.typelist:
@@ -84,7 +112,7 @@ class OldSettings(QtGui.QMainWindow):
     def check_data(self):
         self.control_times = self.check_controltimes(self.oldsettingsui.disTimes.text())
         self.end_time = self.check_endtime(self.oldsettingsui.endTime.text())
-        self.devicelist = self.get_settings()
+        self.devicelist = self.check_devicelist(self.oldsettingsui.deviceList.toPlainText())
         tlist = [self.control_times,self.end_time,self.devicelist]
         for i in tlist:
             if i == False:
