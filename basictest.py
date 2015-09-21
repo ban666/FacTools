@@ -205,14 +205,18 @@ class AutoTools(QtGui.QMainWindow, ui):
             print 1111
             if close == QtGui.QMessageBox.Yes:
                 s =QtGui.QFileDialog.getExistingDirectory()
-                save_folder = unicode(QtCore.QString(s))+'\\'+self.reporttime
-                if not os.path.exists(save_folder):
-                    os.makedirs(save_folder)
-                shutil.copy(self.report_excel,save_folder)
-                if os.path.exists(self.report_file):
-                    shutil.copy(self.report_file,save_folder)
-                event.accept()
-            event.accept()
+                if s!='':
+                    save_folder = unicode(QtCore.QString(s))+'\\'+self.reporttime
+                    if not os.path.exists(save_folder):
+                        os.makedirs(save_folder)
+                    shutil.copy(self.report_excel,save_folder)
+                    if os.path.exists(self.report_file):
+                        shutil.copy(self.report_file,save_folder)
+                    event.accept()
+                else:
+                    event.ignore()
+            else:
+                event.ignore()
 
 class TestThread(threading.Thread):
 
