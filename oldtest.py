@@ -45,6 +45,7 @@ class OldTest(QtGui.QMainWindow):
         self.oldui.anaData.clicked.connect(self.save_anadata)
         self.old_settings.old_signal.connect(self.change_settings)
         self.timeout = 300
+        self.loseconnect = 300
         self.com = 'com1'
         self.channelID = '17'
         self.env_init()
@@ -66,7 +67,7 @@ class OldTest(QtGui.QMainWindow):
             os.makedirs(self.report_folder)
         self.zigbeefile = fol+'Zigbeelog'+time.strftime("%Y%m%d%H%M%S", time.localtime())+'.txt'
 
-    def ana_zigbeefile(self,time_range = 1500):
+    def ana_zigbeefile(self):
         try:
             ofolder= self.report_folder+'\\oldtest\\'
             readfile= self.zigbeefile
@@ -74,7 +75,7 @@ class OldTest(QtGui.QMainWindow):
             zipname = ofolder+'oldtest_'+str(time.strftime("%Y%m%d%H%M%S", time.localtime()))+'.zip'
             cfg=ConfigAnalysis(readfile,ofolder)
             get_content = cfg.GetDate(2)
-            result = cfg.GetAllErrByType(time_range=time_range)
+            result = cfg.GetAllErrByType(time_range=self.loseconnect)
             cfg.WriteToExcel(result)
             zip_folder(ofolder,zipname)
             return zipname

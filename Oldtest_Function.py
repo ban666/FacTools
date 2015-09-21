@@ -20,7 +20,7 @@ def CheckSum(data,jz=16):
     return result
 
 def setZigbee(channel='15',panid='3125'):
-    tstr=''.join(['000000000000a103',channel,panid])
+    tstr=''.join(['000000000000a103',str(channel),panid])
     tstr=''.join(['F8e6',tstr,CheckSum(tstr)])
     return tstr
 
@@ -52,7 +52,7 @@ class OldTestFunction(QThread):
         self.content = ''
         self.timeout = 30
         self.channel = '15'
-        self.lose_timeout = 900
+        self.lose_timeout = 300 #待调整
         self.iddict={}
         self.macdict={}
         self.typelist = []
@@ -141,16 +141,11 @@ class OldTestFunction(QThread):
         try:
             for i in range(int(self.control_times)):
                 if self.stopflag == True:
-                    break
-                for j in range(len(cmdlist)):
-                    cmd = cmdlist[j][0]
-                    #print cmd
-                    self.t.write(cmd.decode('hex'))
-                    time.sleep(1)
-                for k in range(len(cmdlist)):
-                    cmd = cmdlist[k][1]
-                    #print cmd
-                    self.t.write(cmd.decode('hex'))
+                        break
+                for j in cmdlist:
+                    if self.stopflag == True:
+                            break
+                    self.t.write(j.decode('hex'))
                     time.sleep(1)
                 self.ot_controltimesSignal.emit(str(i+1))
                 print 'control times:',i+1
@@ -164,25 +159,17 @@ class OldTestFunction(QThread):
         terminal_time = self.sec2time(self.end_time).split(':')[:2]
         while True:
             if self.stopflag == True:
-                    break
+                            break
             try:
-                for j in range(len(cmdlist)):
+                for j in cmdlist:
+                    if self.stopflag == True:
+                            break
                     now_time = int(time.time())
                     if self.sec2time(now_time).split(':')[:2] == terminal_time:
                         self.ot_terminalSignal.emit('terminal')
                         raise
-                    cmd = cmdlist[j][0]
                     #print cmd
-                    self.t.write(cmd.decode('hex'))
-                    time.sleep(1)
-                for k in range(len(cmdlist)):
-                    now_time = int(time.time())
-                    if self.sec2time(now_time).split(':')[:2] == terminal_time:
-                        self.ot_terminalSignal.emit('terminal')
-                        raise
-                    cmd = cmdlist[k][1]
-                    #print cmd
-                    self.t.write(cmd.decode('hex'))
+                    self.t.write(j.decode('hex'))
                     time.sleep(1)
                 c_times +=1
                 self.ot_controltimesSignal.emit(str(c_times))
@@ -215,8 +202,6 @@ class OldTestFunction(QThread):
         nowtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         if data_len == 42 and tstr[16:20] == 'a209':
             return
-        print 'data_check:',tstr
-        print data_len,tstr[8:14],tstr[8:14] == 'access'
         if data_len == 14 and tstr[8:14] == 'access':
             print 'accese'
             self.statusdict[id][3:] = ['是','',nowtime]
@@ -227,7 +212,6 @@ class OldTestFunction(QThread):
             print 'accesee'
             self.statusdict[id][3:] = ['是','',nowtime]
             self.statusChange_Signal.emit(self.statusdict[id])
-            print self.statusdict[id]
             return
         elif data_len == status_len:
             try:
@@ -235,6 +219,7 @@ class OldTestFunction(QThread):
                 device_status = self.status_testdict[device_type][1][index]
                 self.statusdict[id][3:] = ['是',device_status,nowtime]
                 self.statusChange_Signal.emit(self.statusdict[id])
+                print id,device_status
                 return
             except Exception as e :
                 print 'data_check:',e
@@ -251,6 +236,7 @@ class OldTestFunction(QThread):
 
     def run(self):
         cmdlist = self.gen_cmd_for_oldtest()
+        print cmdlist
         if len(cmdlist) == 0:
             return
         if self.control_times!='null':

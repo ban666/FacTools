@@ -33,7 +33,7 @@ def CheckSum(data,jz=16):
     return result
 
 def setZigbee(channel='15',panid='3125'):
-    tstr=''.join(['000000000000a103',channel,panid])
+    tstr=''.join(['000000000000a103',str(channel),panid])
     tstr=''.join(['F8e6',tstr,CheckSum(tstr)])
     return tstr
 

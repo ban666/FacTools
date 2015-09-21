@@ -32,7 +32,7 @@ def CheckSum(data,jz=16):
     return result
 
 def setZigbee(channel='15',panid='3125'):
-    tstr=''.join(['000000000000a103',channel,panid])
+    tstr=''.join(['000000000000a103',str(channel),panid])
     tstr=''.join(['F8e6',tstr,CheckSum(tstr)])
     return tstr
 
@@ -193,7 +193,7 @@ class DisTestFunction(QThread):
         s_time = time.time()
         t_info = []
         for (i,j) in self.iddict.items():
-            t_info.append(i+'00'+j)
+            t_info.append(i+'access')
         t_data=''
         while True:
             time_range = '{:.2f}'.format(time.time()-s_time)
@@ -205,8 +205,8 @@ class DisTestFunction(QThread):
                 return 'terminal'
             if len(t_info) == 0:
                 return True
-            if t_data[20:40] in t_info:
-                t_info.pop(t_info.index(t_data[20:40]))
+            if t_data in t_info:
+                t_info.pop(t_info.index(t_data))
                 print 'pop:',t_info
             #print int(float(time_range)),self.timeout
             if int(float(time_range)) == int(self.timeout):
@@ -220,7 +220,6 @@ class DisTestFunction(QThread):
         elif check_result == False:
             self.okSignal.emit('fail')
         else:
-            print 11111111111111
             self.okSignal.emit('block')
             return
 
@@ -310,7 +309,7 @@ class TestThread(threading.Thread):
 
 if __name__ == '__main__':
     q = Queue()
-    whitelist = ['00124b0004f0021b16','00124b0003a60fa614']
+    whitelist = ['00124b0004f0021b16','00124b0003a60fa614','00124b0003a60fa615']
     t = ''
     cmd = DisTestFunction(t,whitelist).gen_cmd_for_distest()
     print cmd

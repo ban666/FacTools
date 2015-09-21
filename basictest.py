@@ -216,7 +216,7 @@ class AutoTools(QtGui.QMainWindow, ui):
                 else:
                     event.ignore()
             else:
-                event.ignore()
+                event.accept()
 
 class TestThread(threading.Thread):
 

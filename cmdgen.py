@@ -124,7 +124,8 @@ class CmdGenerate:
             print id,type
             if self.errdict.has_key(type):
                   ret,st=self.errdict[type](id)
-                  tlist.append(ret)
+                  for j in ret:
+                          tlist.append(j)
 
         return tlist
 
