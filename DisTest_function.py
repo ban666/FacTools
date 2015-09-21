@@ -267,7 +267,7 @@ class DisTestFunction(QThread):
                                     print id,mac
                                     access_cmd=deviceAccess(cdata,id).decode('hex')
                                     self.t.write(access_cmd)
-
+                                    q.put(mac+'access')
                             data_flag=1
                             buffer=buffer[dlength:]
                             tstr=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+" "+cdata+'\n'

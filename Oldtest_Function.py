@@ -109,6 +109,8 @@ class OldTestFunction(QThread):
             '17':[['F103010000','F103000100','F103000001'],['打开','暂停','关闭']],
             '18':[['F103010000','F103000100','F103000001'],['打开','暂停','关闭']]
         }
+
+    #generate id for devicelist,send whitelist to zigbee
     def id_gen(self):
         for i in range(len(self.devicelist)):
             mac = str(self.devicelist[i])[:16]
@@ -116,7 +118,6 @@ class OldTestFunction(QThread):
             typestr = str(self.devicelist[i])[16:18]
             type = self.devicedict[typestr]
             self.iddict[mac] = str('{:02x}'.format(i+1))
-            self.macdict[mac] = id
             self.statusdict[id] = [str(i),mac,type,'否','','']
             if str(self.devicelist[i])[-1:] == str(2):
                 self.typelist.append(str('{:04x}'.format(i+1))+','+typestr)
@@ -159,7 +160,6 @@ class OldTestFunction(QThread):
                 return
 
     def run_by_end_time(self,cmdlist):
-        stime = int(time.time())
         c_times = 0
         terminal_time = self.sec2time(self.end_time).split(':')[:2]
         while True:
@@ -197,35 +197,37 @@ class OldTestFunction(QThread):
                 if self.stopflag == True:
                     break
                 t_data = q.get(timeout=0.01)
-                #print '11111'
                 if t_data != '':
-                    print 'getdata:',t_data
                     self.data_check(str(t_data))
                 time.sleep(0.01)
-                print '22222'
             except Exception as e:
                 pass
 
     def data_check(self,tstr):
-        print 'data_check:',tstr
         id = tstr[4:8]
-        #mac = self.macdict[id]
         data_len = len(tstr.strip())
-        device_type = tstr[14:16]
-        status_len = self.device_statusdict[device_type][0]
-        status_str = tstr[self.device_statusdict[device_type][1]:self.device_statusdict[device_type][2]].upper()
-        print id
-        print data_len
-        print status_str
+        try:
+            device_type = tstr[14:16]
+            status_len = self.device_statusdict[device_type][0]
+            status_str = tstr[self.device_statusdict[device_type][1]:self.device_statusdict[device_type][2]].upper()
+        except:
+            pass
         nowtime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        print 1111
         if data_len == 42 and tstr[16:20] == 'a209':
+            return
+        print 'data_check:',tstr
+        print data_len,tstr[8:14],tstr[8:14] == 'access'
+        if data_len == 14 and tstr[8:14] == 'access':
+            print 'accese'
+            self.statusdict[id][3:] = ['是','',nowtime]
+            print self.statusdict[id]
+            self.statusChange_Signal.emit(self.statusdict[id])
             return
         if data_len == 52:
             print 'accesee'
             self.statusdict[id][3:] = ['是','',nowtime]
-
             self.statusChange_Signal.emit(self.statusdict[id])
+            print self.statusdict[id]
             return
         elif data_len == status_len:
             try:
@@ -266,14 +268,15 @@ class OldTestFunction(QThread):
                 return
             check_num = 0
             time_range = '{:.2f}'.format(time.time()-s_time)
+            if int(float(time_range)) == int(self.timeout):
+                return False
             for i,j in self.statusdict.items():
                 if j[3] == '是':
                     check_num +=1
             if check_num == device_num:
                 return True
             #print int(float(time_range)),self.timeout
-            if int(float(time_range)) == int(self.timeout):
-                return False
+
             time.sleep(0.01)
 
     def login_test(self,q):
@@ -353,8 +356,8 @@ class OldTestFunction(QThread):
                                     print id,mac
                                     access_cmd=deviceAccess(cdata,id).decode('hex')
                                     self.t.write(access_cmd)
+                                    q.put('f8e600'+id+'access')
 
-                            data_flag=1
                             buffer=buffer[dlength:]
                             tstr=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+" "+cdata+'\n'
                             #print tstr

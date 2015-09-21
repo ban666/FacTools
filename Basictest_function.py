@@ -175,20 +175,20 @@ class Dt(QThread):
             time_range = '{:.2f}'.format(time.time()-s_time)
             if self.stopflag == True:
                 return False
-            try:
-                t_data = q.get(timeout=0.01)
-                if t_data == self.content[:16]+'access':
-                    emit_text = u'入网时间为:'+str(time_range)+u', 入网测试结果：PASS'
-                    self.emit_data(emit_text)
-                    self.resultdict['login'] = 'OK'
-                    return True
-                if int(float(time_range)) == int(self.timeout):
+            if int(float(time_range)) == int(self.timeout):
                     emit_text = u'设备在规定时间内未能入网,'+u'入网测试结果：FAIL'
                     self.emit_data(emit_text)
                     self.resultdict['login'] = 'Fail'
                     return False
+            try:
+                t_data = q.get(timeout=0.01)
             except:
-                pass
+                    pass
+            if t_data == self.content[:16]+'access':
+                emit_text = u'入网时间为:'+str(time_range)+u', 入网测试结果：PASS'
+                self.emit_data(emit_text)
+                self.resultdict['login'] = 'OK'
+                return True
             time.sleep(0.01)
 
     def login_test(self,q,p):
@@ -201,10 +201,6 @@ class Dt(QThread):
         return result
 
     def status_test(self,q,p):
-        '''
-        print '状态上传测试启动...'.decode('utf-8').encode('gbk')
-        pass
-        '''
         emit_text = u'状态上传测试启动，请根据提示进行对应操作...'
         self.emit_data(emit_text)
         result = 0
@@ -235,11 +231,8 @@ class Dt(QThread):
                     emit_text = u'通过！'
                     self.emit_data(emit_text)
                     break
+
                 if int(float(time_range)) == int(self.timeout):
-                    '''
-                    print '设备在规定时间内未收到控制响应信息'.decode('utf-8').encode('gbk')
-                    print '控制测试结果：FAIL'.decode('utf-8').encode('gbk')
-                    '''
                     emit_text = u'设备在规定时间内未收到状态信息,状态上传测试结果：FAIL'
                     self.emit_data(emit_text)
                     self.resultdict['status'] = 'Fail'
