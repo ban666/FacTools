@@ -48,6 +48,8 @@ class DisSettings(QtGui.QMainWindow):
 
     def check_devicelist(self,content):
         content = content.split('\n')
+        if str(content[-1]).strip()=='':
+            content = content[:-1]
         for i in content:
             i=str(i).strip()
             if len(i)!=18 or not str(i)[-2:] in self.typelist:

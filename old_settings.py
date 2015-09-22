@@ -46,6 +46,8 @@ class OldSettings(QtGui.QMainWindow):
 
     def check_devicelist(self,content):
         content = content.split('\n')
+        if str(content[-1]).strip()=='':
+            content = content[:-1]
         for j in range(len(content)):
             i=str(content[j]).strip()
             if len(i)!=18 and len(i)!=19:

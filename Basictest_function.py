@@ -90,7 +90,7 @@ class Dt(QThread):
             '01':[self.login_test],
             '04':[self.login_test,self.status_test,self.control_test],
             '03':[self.login_test,self.status_test],
-            '06':[self.login_test],#TODO 红外命令发射测试
+            '06':[self.login_test],
             '0d':[self.login_test,self.status_test],
             '0c':[self.login_test,self.status_test],
             '0e':[self.login_test,self.status_test],
@@ -118,13 +118,13 @@ class Dt(QThread):
 
         self.status_testdict={
             '03':[['F10401','F10400'],['请打开门磁','请关闭门磁']],
-            "04":[['F102010F','F102000F','F102010F','F1020101'],['请打开调光器','请关闭调光器','请将调光器调到最亮','请将调光器调到最暗']], #调光状态位存疑
+            "04":[['F102010F','F102000F',[ 'f1020101', 'f1020102', 'f1020103', 'f1020104', 'f1020105', 'f1020106', 'f1020107', 'f1020108', 'f1020109', 'f102010a', 'f102010b', 'f102010c', 'f102010d', 'f102010e']],['请打开调光器','请关闭调光器','请进行调光']], #调光状态位存疑
             '0c':[['F10401','F10400','F10402','F10400'],['请触发人体红外报警器','请等待人体红外报警器关闭','请触发拆除报警','请等待拆除报警结束']],
             '0d':[['F10401','F10400','F10402','F10400'],['请触发烟雾报警','请等待烟雾报警结束','请触发拆除报警','请等待拆除报警结束']],
             '0e':[['0001','0000','0100','0000'],['请触发可燃气体报警','请等待可燃气体报警结束','请触发拆除报警','请等待拆除报警结束']],
-            '14':[['F10101','F10100'],['请打开1孔','请关闭1孔']],
-            '15':[['F1020100','F1020101','F1020001','F1020000'],['请打开1孔','请打开2孔','请关闭1孔','请关闭2孔']],
-            '16':[['F103010000','F103010100','F103010101','F103000101','F103000001','F103000000'],['请打开1孔','请打开2孔','请打开3孔','请关闭1孔','请关闭2孔','请关闭3孔']],
+            '14':[['F10101','F10100'],['请打开全部开关','请关闭全部开关']],
+            '15':[['F1020101','F1020000'],['请打开全部开关','请关闭全部开关']],
+            '16':[['F103010101','F103000000'],['请打开全部开关','请关闭全部开关']],
             '17':[['F103010000','F103000100','F103000001'],['请点击打开按钮','请点击暂停按钮','请点击关闭按钮']],
             '18':[['F103010000','F103000100','F103000001'],['请点击打开按钮','请点击暂停按钮','请点击关闭按钮']]
         }
@@ -204,12 +204,12 @@ class Dt(QThread):
         emit_text = u'状态上传测试启动，请根据提示进行对应操作...'
         self.emit_data(emit_text)
         result = 0
-        type = str(self.content[16:])
-        tlen = self.statusdict[type][0]
-        sid  = self.statusdict[type][1]
-        did  = self.statusdict[type][2]
-        status_list = self.status_testdict[type][0]
-        msg_list = self.status_testdict[type][1]
+        ttype = str(self.content[16:])
+        tlen = self.statusdict[ttype][0]
+        sid  = self.statusdict[ttype][1]
+        did  = self.statusdict[ttype][2]
+        status_list = self.status_testdict[ttype][0]
+        msg_list = self.status_testdict[ttype][1]
         for i in range(len(status_list)):
             self.clear_q(q)
             s_time = time.time()
@@ -226,12 +226,18 @@ class Dt(QThread):
                     pass
                 if len(t_data)!=0:
                     print len(t_data) , tlen ,t_data[sid:did] , status_list[i]
-                if len(t_data) == tlen and t_data[sid:did] == status_list[i].lower():
-                    result = 1
-                    emit_text = u'通过！'
-                    self.emit_data(emit_text)
-                    break
-
+                if type(status_list[i])!=list:
+                    if len(t_data) == tlen and t_data[sid:did] == status_list[i].lower():
+                        result = 1
+                        emit_text = u'通过！'
+                        self.emit_data(emit_text)
+                        break
+                else:
+                    if len(t_data) == tlen and t_data[sid:did] in status_list[i]:
+                        result = 1
+                        emit_text = u'通过！'
+                        self.emit_data(emit_text)
+                        break
                 if int(float(time_range)) == int(self.timeout):
                     emit_text = u'设备在规定时间内未收到状态信息,状态上传测试结果：FAIL'
                     self.emit_data(emit_text)
@@ -270,17 +276,20 @@ class Dt(QThread):
         for i in range(len(cmdlist)):
             self.clear_q(q)
             self.t.write(cmdlist[i])
-            print len(cmdlist),i,cmdlist[i],statuslist[i]
+            print cmdlist[i]
+            #print len(cmdlist),i,cmdlist[i],statuslist[i]
             s_time = time.time()
             while True:
                 t_data = ''
                 time_range = time.time()-s_time
+                if self.stopflag == True:
+                    return False
                 try:
                     t_data = q.get(timeout=0.01)
-                    print t_data
+                    print len(t_data),tlen,t_data[sid:did],statuslist[i]
                 except:
                     pass
-                if len(t_data) == tlen and t_data[sid:did] == statuslist[i]:
+                if len(t_data) == tlen and t_data[sid:did].lower() == statuslist[i].lower():
                     result = 1
                     break
                 if int(float(time_range)) == int(self.timeout):

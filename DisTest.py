@@ -126,6 +126,14 @@ class DisTest(QtGui.QMainWindow):
         except Exception as e:
             print e
 
+    def closeEvent(self, event):
+        try:
+            self.terminal_test()
+        except Exception as e:
+            print e
+        finally:
+            event.accept()
+
 class DisTestZigbeeThread(threading.Thread):
 
     def __init__(self,t,channel,whitelist,thread_num=0, timeout=0.01):

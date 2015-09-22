@@ -92,6 +92,7 @@ class AutoTools(QtGui.QMainWindow, ui):
                 self.thread.start()
         else:
             try:
+                self.thread_test.stopflag=True
                 self.t.close()
                 time.sleep(0.1)
                 self.zigbee_thread.stop()
@@ -160,7 +161,7 @@ class AutoTools(QtGui.QMainWindow, ui):
     def p1(self):
         print 'auto：',self.com,self.channelID,self.timeout
         try:
-            self.t.close()
+            self.end_test()
         except:
             pass
         try:

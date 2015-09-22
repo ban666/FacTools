@@ -61,17 +61,17 @@ class CmdGenerate:
         return cmd_list,status_list
 
     def CmdGen_Dg(self,id):
-        cmd_list=['00000100','00000000','00000100']
-        status_list = ['F102010F','F102000F','F102010F']
+        cmd_list=['000002010f','00000000','00000100']
+        status_list = ['f102010f','f102000f','F102010f']
         for i in range(1,16):
             appendstr=''.join(['000002010','{:x}'.format(i)])
-            status_appendstr = ''.join(['F104010','{:x}'.format(i)])
+            status_appendstr = ''.join(['f102010','{:x}'.format(i)])
             #kgappendstr=''.join(['调光级别',str(i)])
             cmd_list.append(appendstr)
             status_list.append(status_appendstr)
             #kg_list.append(kgappendstr)
-        cmd_list.append('00000100')
-        status_list.append('F1040007')
+        cmd_list.append('00000000')
+        status_list.append('F102000f')
         cmd_list=[''.join(['0000',id,x]) for x in cmd_list]
         cmd_list=[''.join(['f8e6',x,self.CheckSum(x)]) for x in cmd_list]
         return cmd_list,status_list
@@ -148,3 +148,14 @@ class CmdGenerate:
         result = [tlist,rlist]
         return result
 
+if __name__ == '__main__':
+    lista = ['0001,04']
+    listb = ['0003,16']
+    a =CmdGenerate(lista)
+    b= a.CmdGen()
+    c=CmdGenerate(listb)
+    d= c.CmdGen()
+    print len(b),len(d)
+    for i in b:
+        for j in i:
+            print j

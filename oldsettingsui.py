@@ -7,7 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt4 import QtCore, QtGui
-
+from datetime import datetime
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
@@ -89,6 +89,8 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(_translate("Form", "Form", None))
+        endTime_txt = str(datetime.today())[:10]+' 23:59:59'
+        self.endTime.setText(_translate("Form", endTime_txt, None))
         self.saveSettings.setText(_translate("Form", "设置", None))
         self.label.setText(_translate("Form", "控制次数", None))
         self.label_2.setText(_translate("Form", "结束时间", None))
@@ -111,3 +113,11 @@ class Ui_Form(object):
         self.label_15.setText(_translate("Form", ".......", None))
         self.label_17.setText(_translate("Form", "00124b000a013547152", None))
 
+if __name__ == "__main__":
+    import sys
+    app = QtGui.QApplication(sys.argv)
+    MainWindow = QtGui.QMainWindow()
+    ui = Ui_Form()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())
