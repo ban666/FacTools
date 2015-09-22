@@ -1,6 +1,6 @@
 # -*- coding:utf-8 -*-
  
-import os,sys,re,time
+import os,time
 from Excelhandle_function import ExcelWriteForAna
 
 
