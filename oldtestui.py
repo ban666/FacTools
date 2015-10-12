@@ -30,7 +30,7 @@ class Ui_Form(object):
         self.tableWidget.setGeometry(QtCore.QRect(25, 101, 741, 461))
         self.tableWidget.setObjectName(_fromUtf8("tableWidget"))
         self.tableWidget.setColumnCount(5)
-        self.tableWidget.setRowCount(100)
+        self.tableWidget.setRowCount(200)
         item = QtGui.QTableWidgetItem()
         self.tableWidget.setVerticalHeaderItem(0, item)
         item = QtGui.QTableWidgetItem()
@@ -48,7 +48,7 @@ class Ui_Form(object):
         item.setTextAlignment(QtCore.Qt.AlignJustify|QtCore.Qt.AlignVCenter)
         self.tableWidget.setHorizontalHeaderItem(4, item)
         self.tableWidget.setColumnWidth(4,140)
-        for i in range(100):
+        for i in range(200):
             for j in range(5):
                 item = QtGui.QTableWidgetItem()
                 self.tableWidget.setItem(i, j, item)

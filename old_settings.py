@@ -66,8 +66,8 @@ class OldSettings(QtGui.QMainWindow):
             tstr=u'设备列表中有重复元素，请检查后重新填写'
             self.alert_warning(tstr)
             return False
-        if len(content) > 100:
-            tstr=u'通断设备最大为100个，配置名单超过范围'
+        if len(content) > 200:
+            tstr=u'通断设备最大为200个，配置名单超过范围'
             self.alert_warning(tstr)
             return False
         return content
