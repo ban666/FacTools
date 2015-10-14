@@ -47,7 +47,8 @@ class AutoTools(QtGui.QMainWindow, ui):
             '11':'智能报警器',
             '13':'红外水晶开关',
             '17':'智能窗帘',
-            '18':'智能窗户'
+            '18':'智能窗户',
+            '20':'情景面板'
             }
 
     def change_settings(self,setting):

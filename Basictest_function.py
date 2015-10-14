@@ -83,7 +83,8 @@ class Dt(QThread):
             '11':'智能报警器',
             '13':'红外水晶开关',
             '17':'智能窗帘',
-            '18':'智能窗户'
+            '18':'智能窗户',
+            '20':'情景面板'
             }
 
         self.testdict = {
@@ -99,7 +100,8 @@ class Dt(QThread):
             '16':[self.login_test,self.status_test,self.control_test],
             '11':[self.login_test,self.control_test],
             '17':[self.login_test,self.status_test,self.control_test],
-            '18':[self.login_test,self.status_test,self.control_test]
+            '18':[self.login_test,self.status_test,self.control_test],
+            '20':[self.login_test,self.status_test]
         }
 
         self.statusdict={
@@ -113,7 +115,8 @@ class Dt(QThread):
             '15':[28,16,24],
             '16':[30,16,26],
             '17':[30,16,26],
-            '18':[30,16,26]
+            '18':[30,16,26],
+            '20':[26,16,22]
         }
 
         self.status_testdict={
@@ -126,7 +129,8 @@ class Dt(QThread):
             '15':[['F1020101','F1020000'],['请打开全部开关','请关闭全部开关']],
             '16':[['F103010101','F103000000'],['请打开全部开关','请关闭全部开关']],
             '17':[['F103010000','F103000001','F103000100'],['请点击打开按钮','请点击关闭按钮','请点击暂停按钮']],
-            '18':[['F103010000','F103000001','F103000100'],['请点击打开按钮','请点击关闭按钮','请点击暂停按钮']]
+            '18':[['F103010000','F103000001','F103000100'],['请点击打开按钮','请点击关闭按钮','请点击暂停按钮']],
+            '20':[['F10101','F10102','F10103','F10104'],['请执行情景1','请执行情景2','请执行情景3','请执行情景4']]
         }
     def set_content(self,content):
         self.content = content

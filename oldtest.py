@@ -179,7 +179,7 @@ class OldTest(QtGui.QMainWindow):
 
     def start_control(self,signal):
         if signal == 'ok':
-            tstr = u'通断设备已全部入网，是否开始控制测试'
+            tstr = u'设备已全部入网，是否开始控制测试'
             confirm = QtGui.QMessageBox.question(self,'Message',tstr,QtGui.QMessageBox.Yes,QtGui.QMessageBox.No)
             if confirm == QtGui.QMessageBox.Yes:
                 self.oldtest.start()
@@ -187,7 +187,7 @@ class OldTest(QtGui.QMainWindow):
                 #self.terminal_test()
                 pass
         elif signal == 'fail':
-            tstr = u'通断设备并未全部入网，是否开始控制测试'
+            tstr = u'设备并未全部入网，是否开始控制测试'
             confirm = QtGui.QMessageBox.question(self,'Message',tstr,QtGui.QMessageBox.Yes,QtGui.QMessageBox.No)
             if confirm == QtGui.QMessageBox.Yes:
                 self.oldtest.start()

@@ -16,33 +16,7 @@ class OldSettings(QtGui.QMainWindow):
         self.oldsettingsui.setupUi(self)
         self.oldsettingsui.saveSettings.clicked.connect(self.save_settings)
         #self.table = self.oldsettingsui.tableWidget
-        self.typelist=['01','03','04','0c','0d','0e','06','11','14','15','16','17','18']
-
-    '''
-    def get_settings(self):
-        result = []
-        for i in range(100):
-            mac = self.table.item(i,0)
-            flag = self.table.item(i,1).checkState()
-            #print i,type(mac)
-            if type(mac) != type(None) :
-                mac = str(mac.text()).strip()
-                check_status = self.check_mac(mac)
-                if check_status == False:
-                    return False
-                tstr = mac+str(flag)
-                result.append(tstr)
-        print result
-        if len(result) != len(list(set(result))):
-            tstr=u'设备列表中有重复元素，请检查后重新填写'
-            self.alert_warning(tstr)
-            return False
-        if len(result) == 0:
-            tstr=u'设备列表为空，请填写设备列表'
-            self.alert_warning(tstr)
-            return False
-        return result
-    '''
+        self.typelist=['01','03','04','0c','0d','0e','06','11','14','15','16','17','18','20']
 
     def check_devicelist(self,content):
         content = content.split('\n')
