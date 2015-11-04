@@ -41,7 +41,8 @@ class DisTest(QtGui.QMainWindow):
         self.control_times = content['control_times']
         self.end_time = content['end_time']
         self.device_list = content['device_list']
-        print 'aaa',self.control_times,self.end_time,list(self.device_list)
+        self.gen_type = content['gen_type']
+        print 'aaa',self.control_times,self.end_time,list(self.device_list),self.gen_type
 
     def settings_show(self):
         self.dis_settings.show()
@@ -64,6 +65,7 @@ class DisTest(QtGui.QMainWindow):
             self.distest.errSignal.connect(self.err_handle)
             self.distest.control_times = self.control_times
             self.distest.end_time = self.end_time
+            self.distest.gen_type = self.gen_type
             self.distest.timeout = self.timeout
             self.wait_for_access()
             self.zigbee_thread.start()

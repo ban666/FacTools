@@ -28,6 +28,14 @@ class CmdGenerate:
         '17':[30,16,26,'f103000000'],
         '18':[30,16,26,'f103000000']
         }
+        self.cmddict={
+        "02":{1:['000002010f','00000000'],2:['000002010f','00000000'],3:['000002010f','00000000']},
+        "04":{1:['000002010f','00000000'],2:['000002010f','00000000'],3:['000002010f','00000000']},
+        "11":{1:['0000010101','0000010100'],2:['0000010101','0000010100'],3:['0000010101','0000010100']},
+        '14':{1:['000001020101','000001020100'],2:['000001020101','000001020100'],3:['000001020101','000001020100']},
+        '15':{1:['000001020101','000001020201','000001020100','000001020200'],2:['000001020F00','000001020000'],3:['000001020101','000001020201','000001020200','000001020100']},
+        '16':{1:['000001020101','000001020201','000001020301','000001020100','000001020200','000001020300'],2:['000001020F00','000001020000'],3:['000001020101','000001020201','000001020301','000001020300','000001020200','000001020100']}
+        }
 
     def CheckSum(self,data,jz=16):
         sum=0
@@ -76,6 +84,8 @@ class CmdGenerate:
         cmd_list=[''.join(['f8e6',x,self.CheckSum(x)]) for x in cmd_list]
         return cmd_list,status_list
 
+
+
     def CmdGen_Bjq(self,id):
         cmd_list=['0000010101','0000010100']
         #kg_list=['开','关']
@@ -100,20 +110,39 @@ class CmdGenerate:
         cmd_list=[''.join(['f8e6',x,self.CheckSum(x)]) for x in cmd_list]
         return cmd_list,status_list
 
-    def CmdGenForDisTest(self):
+    def CmdGenForDisTest(self,gen_type):
+        ret_list=[]
         content = self.list1
-        tlist=[]
         for i in content:
             con=i.split(',')
             type=con[1].strip('\n')
             id=con[0]
             print id,type
-            if self.errdict.has_key(type):
-                  ret,st=self.errdict[type](id)
-                  tlist.append(ret[-2:])
+            if self.cmddict.has_key(type):
+                cmd_list=self.cmddict[type][gen_type]
+                cmd_list=[''.join(['0000',id,x]) for x in cmd_list]
+                cmd_list=[''.join(['f8e6',x,self.CheckSum(x)]) for x in cmd_list]
+                open_list = cmd_list[:len(cmd_list)/2]
+                close_list = cmd_list[len(cmd_list)/2:]
+                ret_list.append([open_list,close_list])
+        return ret_list
+    '''
+    def CmdGenForDisTest(self,gen_type):
+        content = self.list1
+        tlist=[]
+        if gen_type==1:
+            for i in content:
+                con=i.split(',')
+                type=con[1].strip('\n')
+                id=con[0]
+                print id,type
+                if self.errdict.has_key(type):
+                      ret,st=self.errdict[type](id)
+                      ret
+                      tlist.append(ret[-2:])
 
         return tlist
-
+    '''
     def CmdGenForOldTest(self):
         content = self.list1
         tlist=[]

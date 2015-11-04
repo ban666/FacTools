@@ -15,12 +15,12 @@ class DisSettings(QtGui.QMainWindow):
         self.dissettingsui = dis_settings_ui()
         self.dissettingsui.setupUi(self)
         self.dissettingsui.saveSettings.clicked.connect(self.save_settings)
-        self.typelist=['14','15','16']
+        self.typelist=['11','04','14','15','16']
 
     def save_settings(self):
         result = self.check_data()
         if result != False:
-            send_dict = {'control_times':self.control_times,'end_time':self.end_time,'device_list':self.devicelist}
+            send_dict = {'control_times':self.control_times,'end_time':self.end_time,'device_list':self.devicelist,'gen_type':self.gen_type}
             print send_dict
             self.dis_signal.emit(send_dict)
             self.alert_warning(tstr=u'配置成功，请关闭窗口')
@@ -71,7 +71,8 @@ class DisSettings(QtGui.QMainWindow):
         self.control_times = self.check_controltimes(self.dissettingsui.disTimes.text())
         self.end_time = self.check_endtime(self.dissettingsui.endTime.text())
         self.devicelist = self.check_devicelist(self.dissettingsui.deviceList.toPlainText())
-        tlist = [self.control_times,self.end_time,self.devicelist]
+        self.gen_type = self.dissettingsui.gen_type.currentIndex()+1
+        tlist = [self.control_times,self.end_time,self.devicelist,self.gen_type]
         for i in tlist:
             if i == False:
                 tstr=u'配置错误，请检查后重新填写'

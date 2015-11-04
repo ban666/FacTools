@@ -62,7 +62,6 @@ class OldTestFunction(QThread):
         self.t = t
         self.stopflag = False
         self.devicelist = devicelist
-        #self.id_gen()
         self.devicedict={
             '01':'智能路由节点',
             '02':'智能调光器',
@@ -107,17 +106,16 @@ class OldTestFunction(QThread):
             '11':[['F10101','F10100'],['打开','关闭']],
             '14':[['F10101','F10100'],['1开','1关']],
             '15':[['F1020100','F1020101','F1020001','F1020000'],['1开2关','1开2开','1关2开','1关2关']],
-            '16':[['F103010000','F103010100','F103010101','F103000101','F103000001','F103000000'],['1开2关3关','1开2开3关','1开2开3开','1关2开3开','1关2关3开','1关2关3关']],
+            '16':[['F103010000','F103010001','F103010100','F103010101','F103000101','F103000100','F103000001','F103000000'],['1开2关3关','1开2关3开','1开2开3关','1开2开3开','1关2开3开','1关2开3关','1关2关3开','1关2关3关']],
             '17':[['F103010000','F103000100','F103000001'],['打开','暂停','关闭']],
             '18':[['F103010000','F103000100','F103000001'],['打开','暂停','关闭']],
             '20':[['F10101','F10102','F10103','F10104','F10100'],['执行情景1','执行情景2','执行情景3','执行情景4','无情景执行']]
         }
-
     #generate id for devicelist,send whitelist to zigbee
     def id_gen(self):
         for i in range(len(self.devicelist)):
             mac = str(self.devicelist[i])[:16]
-            id = str('{:04x}'.format(i+1))
+            id = str('{:2x}'.format(i+1))
             typestr = str(self.devicelist[i])[16:18]
             type = self.devicedict[typestr]
             self.iddict[mac] = str('{:02x}'.format(i+1))
@@ -194,7 +192,7 @@ class OldTestFunction(QThread):
                 pass
 
     def data_check(self,tstr):
-        id = tstr[4:8]
+        id = tstr[6:8]
         data_len = len(tstr.strip())
         try:
             device_type = tstr[14:16]

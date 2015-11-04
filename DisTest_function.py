@@ -65,6 +65,7 @@ class DisTestFunction(QThread):
         self.typelist = []
         self.control_times = 'null'
         self.end_time = 'null'
+        self.gen_type = 1
         self.t = t
         self.stopflag = False
         self.whitelist=whitelist
@@ -101,7 +102,7 @@ class DisTestFunction(QThread):
 
     def gen_cmd_for_distest(self):
         cmdg = cmdgen.CmdGenerate(self.typelist)
-        cmdlist = cmdg.CmdGenForDisTest()
+        cmdlist = cmdg.CmdGenForDisTest(self.gen_type)
         return cmdlist
 
     def run_by_control_times(self,cmdlist):
@@ -114,18 +115,22 @@ class DisTestFunction(QThread):
                     now_time = int(time.time())
                     cmd = cmdlist[j][0]
                     #print cmd
-                    self.t.write(cmd.decode('hex'))
-                    send_str = now_time - stime
-                    self.endtimeSignal.emit(self.sec2time(send_str))
-                    time.sleep(1)
+                    for opencmd in cmd:
+                        self.t.write(opencmd.decode('hex'))
+                        send_str = now_time - stime
+                        self.endtimeSignal.emit(self.sec2time(send_str))
+                        time.sleep(1)
                 for k in range(len(cmdlist)):
                     now_time = int(time.time())
                     cmd = cmdlist[k][1]
+                    if self.gen_type  == 3:
+                        cmd = cmdlist[-(k+1)][1]
                     #print cmd
-                    self.t.write(cmd.decode('hex'))
-                    send_str = now_time - stime
-                    self.endtimeSignal.emit(self.sec2time(send_str))
-                    time.sleep(1)
+                    for closecmd in cmd:
+                        self.t.write(closecmd.decode('hex'))
+                        send_str = now_time - stime
+                        self.endtimeSignal.emit(self.sec2time(send_str))
+                        time.sleep(1)
                 self.controltimesSignal.emit(str(i+1))
                 print 'control times:',i+1
             self.terminalSignal.emit('terminal')
@@ -152,21 +157,25 @@ class DisTestFunction(QThread):
                         raise
                     cmd = cmdlist[j][0]
                     #print cmd
-                    self.t.write(cmd.decode('hex'))
-                    send_str = now_time - stime
-                    self.endtimeSignal.emit(self.sec2time(send_str))
-                    time.sleep(1)
+                    for opencmd in cmd:
+                        self.t.write(opencmd.decode('hex'))
+                        send_str = now_time - stime
+                        self.endtimeSignal.emit(self.sec2time(send_str))
+                        time.sleep(1)
                 for k in range(len(cmdlist)):
                     now_time = int(time.time())
                     if self.sec2time(now_time).split(':')[:2] == terminal_time:
                         self.terminalSignal.emit('terminal')
                         raise
                     cmd = cmdlist[k][1]
+                    if self.gen_type  == 3:
+                        cmd = cmdlist[-(k+1)][1]
                     #print cmd
-                    self.t.write(cmd.decode('hex'))
-                    send_str = time.time() - stime
-                    self.endtimeSignal.emit(self.sec2time(send_str))
-                    time.sleep(1)
+                    for closecmd in cmd:
+                        self.t.write(closecmd.decode('hex'))
+                        send_str = time.time() - stime
+                        self.endtimeSignal.emit(self.sec2time(send_str))
+                        time.sleep(1)
                 c_times +=1
                 self.controltimesSignal.emit(str(c_times))
             except Exception as e:
@@ -311,7 +320,10 @@ if __name__ == '__main__':
     q = Queue()
     whitelist = ['00124b0004f0021b16','00124b0003a60fa614','00124b0003a60fa615']
     t = ''
-    cmd = DisTestFunction(t,whitelist).gen_cmd_for_distest()
+    dt = DisTestFunction(t,whitelist)
+    dt.gen_type=2
+    print dt.typelist
+    cmd = dt.gen_cmd_for_distest()
     print cmd
     '''
     t = serial.Serial(0,38400)
