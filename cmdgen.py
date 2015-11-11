@@ -70,7 +70,7 @@ class CmdGenerate:
 
     def CmdGen_Dg(self,id):
         cmd_list=['000002010f','00000000','00000100']
-        status_list = ['f102010f','f102000f','F102010f']
+        status_list = ['f102010f','f102000f','f102010f']
         for i in range(1,16):
             appendstr=''.join(['000002010','{:x}'.format(i)])
             status_appendstr = ''.join(['f102010','{:x}'.format(i)])
@@ -79,7 +79,7 @@ class CmdGenerate:
             status_list.append(status_appendstr)
             #kg_list.append(kgappendstr)
         cmd_list.append('00000000')
-        status_list.append('F102000f')
+        status_list.append('f102000f')
         cmd_list=[''.join(['0000',id,x]) for x in cmd_list]
         cmd_list=[''.join(['f8e6',x,self.CheckSum(x)]) for x in cmd_list]
         return cmd_list,status_list

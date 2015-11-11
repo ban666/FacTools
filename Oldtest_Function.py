@@ -115,7 +115,7 @@ class OldTestFunction(QThread):
     def id_gen(self):
         for i in range(len(self.devicelist)):
             mac = str(self.devicelist[i])[:16]
-            id = str('{:2x}'.format(i+1))
+            id = str('{:02x}'.format(i+1))
             typestr = str(self.devicelist[i])[16:18]
             type = self.devicedict[typestr]
             self.iddict[mac] = str('{:02x}'.format(i+1))
