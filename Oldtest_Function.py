@@ -6,7 +6,7 @@
 # @Last Modified time: 2015-07-17 15:27:27
 
 import sys,os,ConfigParser
-import serial 
+import serial
 import time,threading
 from multiprocessing import Process,Queue
 import cmdgen
@@ -26,7 +26,7 @@ def setZigbee(channel='15',panid='3125'):
 
 def deviceAccess(tstr,id):
     info=getDeviceInfo(tstr)
-    tstr='000000000000a20a'+info[0]+id+info[1]
+    tstr='000000000000a209'+info[0]+id+info[1]
     csum=CheckSum(tstr)
     result='f8e6'+tstr+csum
     return result
@@ -122,7 +122,7 @@ class OldTestFunction(QThread):
             self.statusdict[id] = [str(i),mac,type,'否','','']
             if str(self.devicelist[i])[-1:] == str(2):
                 self.typelist.append(str('{:04x}'.format(i+1))+','+typestr)
-        print self.statusdict
+        #print self.statusdict
         self.init_Signal.emit(self.statusdict)
 
     def clear_q(self,p):
@@ -206,11 +206,11 @@ class OldTestFunction(QThread):
         if data_len == 14 and tstr[8:14] == 'access':
             print 'accese'
             self.statusdict[id][3:] = ['是','',nowtime]
-            print self.statusdict[id]
+            #print self.statusdict[id]
             self.statusChange_Signal.emit(self.statusdict[id])
             return
         if data_len == 52:
-            print 'accesee'
+            print 'zuwang'
             self.statusdict[id][3:] = ['是','',nowtime]
             self.statusChange_Signal.emit(self.statusdict[id])
             return
@@ -303,7 +303,6 @@ class OldTestFunction(QThread):
         print 'channel:',channel
         fol = os.getcwd()+'/Log/'
         with open(zfile,'w') as f:
-            #print file
             while True:
                 buffer=''
                 try:
@@ -332,10 +331,10 @@ class OldTestFunction(QThread):
                                 continue
                             #get correct data
                             cdata=buffer[:dlength]
+                            print cdata
 
-                            q.put(cdata)
                             if dlength==42 and cdata[16:20]=='a209':
-                                print self.iddict
+                                #print self.iddict
                                 mac=cdata[20:36]
                                 #print self.iddict
                                 if self.iddict.has_key(mac):
@@ -343,17 +342,26 @@ class OldTestFunction(QThread):
                                     print id,mac
                                     access_cmd=deviceAccess(cdata,id).decode('hex')
                                     self.t.write(access_cmd)
-                                    q.put('f8e600'+id+'access')
+                                    try:
+                                        q.put('f8e600'+id+'access')
+                                    except Exception as e:
+                                        print e
 
                             buffer=buffer[dlength:]
                             tstr=time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())+" "+cdata+'\n'
-                            #print tstr
+
+                            print tstr
                             f.write(tstr)
                             f.flush()
+                            try:
+                                q.put(cdata)
+                            except Exception as e:
+                                print e
                         else:
                             buffer=buffer[1:]
                 except Exception as e:
-                    pass
+                        print e
+                        pass
 
                 time.sleep(0.05)
 
